@@ -32,11 +32,11 @@ body{font-family:'Microsoft YaHei',sans-serif;background:#0a0a0a;color:#d4c5a9;o
 .divider span{padding:0 10px}
 
 /* 等待室 */
-#lobby{background:#0a0a0a;padding:20px}
+#lobby{background:#0a0a0a;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column}
 .lobby-header{display:flex;justify-content:space-between;align-items:center;padding:calc(15px + env(safe-area-inset-top)) 20px 15px;background:rgba(20,10,10,0.9);border:1px solid #3a2020;border-radius:8px;margin-bottom:20px}
 .room-id{color:#a08060;font-size:14px}
 .room-id span{color:#d4a060;font-weight:bold;font-size:18px;letter-spacing:2px}
-.player-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;flex:1;overflow-y:auto;padding:10px}
+.player-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:10px}
 .player-card{background:rgba(20,10,10,0.8);border:1px solid #3a2020;border-radius:8px;padding:15px;text-align:center;transition:all 0.3s}
 .player-card.ready{border-color:#2a6a2a;box-shadow:0 0 10px rgba(42,106,42,0.3)}
 .player-card .avatar{width:50px;height:50px;border-radius:50%;background:#2a1a1a;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px}
@@ -46,17 +46,19 @@ body{font-family:'Microsoft YaHei',sans-serif;background:#0a0a0a;color:#d4c5a9;o
 .lobby-footer{text-align:center;padding:15px}
 
 /* 角色选择 */
-.char-card{background:rgba(30,15,15,0.9);border:2px solid #3a2020;border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative}
+.char-card{background:rgba(30,15,15,0.9);border:2px solid #3a2020;border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.char-card:active{transform:scale(0.97);opacity:0.8}
 .char-card:hover{border-color:#8b0000;transform:translateY(-2px)}
 .char-card.selected{border-color:#2ecc71;box-shadow:0 0 15px rgba(46,204,113,0.4)}
 .char-card.taken{opacity:0.4;cursor:not-allowed;filter:grayscale(0.7)}
 .char-card.taken:hover{transform:none;border-color:#3a2020}
-.char-card .char-avatar{font-size:28px;margin-bottom:6px}
-.char-card .char-name{color:#d4c5a9;font-size:13px;font-weight:bold;margin-bottom:4px}
-.char-card .char-gender{color:#888;font-size:11px;margin-bottom:4px}
-.char-card .char-desc{color:#666;font-size:10px;line-height:1.4}
-.char-card .char-taken-by{position:absolute;top:4px;right:4px;background:#8b0000;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
-.char-card .char-selected-tag{position:absolute;top:4px;right:4px;background:#2ecc71;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+.char-card .char-avatar{font-size:28px;margin-bottom:6px;pointer-events:none}
+.char-card .char-name{color:#d4c5a9;font-size:13px;font-weight:bold;margin-bottom:4px;pointer-events:none}
+.char-card .char-gender{color:#888;font-size:11px;margin-bottom:4px;pointer-events:none}
+.char-card .char-desc{color:#666;font-size:10px;line-height:1.4;pointer-events:none}
+.char-card .char-taken-by{position:absolute;top:4px;right:4px;background:#8b0000;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;pointer-events:none}
+.char-card .char-selected-tag{position:absolute;top:4px;right:4px;background:#2ecc71;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;pointer-events:none}
+#charSelectArea{position:relative;z-index:10}
 
 /* 开场CG */
 #cg{background:#000;align-items:center;justify-content:center;text-align:center;position:relative;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box}
@@ -446,7 +448,7 @@ body.day-mode .btn-secondary{background:#fff;color:#5a3a2a;border:1px solid #c9b
   </div>
   <div class="player-list scrollbar" id="playerList"></div>
   <!-- 角色选择区 -->
-  <div id="charSelectArea" style="margin:15px 20px;padding:15px;background:rgba(20,10,10,0.8);border:1px solid #3a2020;border-radius:8px;">
+  <div id="charSelectArea" style="margin:15px 20px;padding:15px;background:rgba(20,10,10,0.8);border:1px solid #3a2020;border-radius:8px;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
     <div style="color:#a08060;font-size:14px;margin-bottom:10px;font-weight:bold;">🎭 选择你的角色（点击选择，不可重复）</div>
     <div id="charSelectGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
     <div id="myCharSelected" style="margin-top:10px;color:#d4a060;font-size:13px;display:none;">你已选择：<span id="myCharName" style="color:#2ecc71;font-weight:bold;"></span></div>
@@ -1639,7 +1641,7 @@ function renderCharSelect(){
     let cls='char-card';
     if(isMySelect)cls+=' selected';
     else if(isTaken)cls+=' taken';
-    html+=`<div class="${cls}" onclick="selectChar('${c.id}')">`;
+    html+=`<div class="${cls}" onclick="selectChar('${c.id}')" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform=''">`;
     if(isMySelect)html+=`<div class="char-selected-tag">已选</div>`;
     else if(isTaken)html+=`<div class="char-taken-by">${takenChars[c.id]}</div>`;
     html+=`<div class="char-avatar">${c.avatar}</div>`;
