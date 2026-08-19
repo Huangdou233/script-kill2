@@ -45,6 +45,19 @@ body{font-family:'Microsoft YaHei',sans-serif;background:#0a0a0a;color:#d4c5a9;o
 .player-card.ready .status{color:#4a8a4a}
 .lobby-footer{text-align:center;padding:15px}
 
+/* 角色选择 */
+.char-card{background:rgba(30,15,15,0.9);border:2px solid #3a2020;border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative}
+.char-card:hover{border-color:#8b0000;transform:translateY(-2px)}
+.char-card.selected{border-color:#2ecc71;box-shadow:0 0 15px rgba(46,204,113,0.4)}
+.char-card.taken{opacity:0.4;cursor:not-allowed;filter:grayscale(0.7)}
+.char-card.taken:hover{transform:none;border-color:#3a2020}
+.char-card .char-avatar{font-size:28px;margin-bottom:6px}
+.char-card .char-name{color:#d4c5a9;font-size:13px;font-weight:bold;margin-bottom:4px}
+.char-card .char-gender{color:#888;font-size:11px;margin-bottom:4px}
+.char-card .char-desc{color:#666;font-size:10px;line-height:1.4}
+.char-card .char-taken-by{position:absolute;top:4px;right:4px;background:#8b0000;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+.char-card .char-selected-tag{position:absolute;top:4px;right:4px;background:#2ecc71;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+
 /* 开场CG */
 #cg{background:#000;align-items:center;justify-content:center;text-align:center;position:relative;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box}
 .cg-text{font-size:24px;color:#8b0000;max-width:700px;line-height:2;opacity:0;transition:opacity 1.5s;text-shadow:0 0 20px #4a0000;margin:auto 0;padding:0 20px}
@@ -391,21 +404,29 @@ body.day-mode .btn-secondary{background:#fff;color:#5a3a2a;border:1px solid #c9b
   <p style="color:#888;font-size:12px;margin-bottom:10px;">开启后，DM会根据你们的公聊发言动态回应、点拨线索、引导剧情。不开启则使用预制静态DM，零依赖直接玩。</p>
   <div style="margin-bottom:10px;">
     <label style="color:#a08060;font-size:13px;">AI-DM模式：</label>
-    <select id="aidmModeSelect" onchange="onAidmModeChange()" style="background:#1a1010;color:#d4c5a9;border:1px solid #3a2020;padding:6px 10px;border-radius:4px;font-size:13px;margin-left:8px;">
+    <select id="aidmModeSelect" onchange="onAidmModeChange();saveAidmConfig();" style="background:#1a1010;color:#d4c5a9;border:1px solid #3a2020;padding:6px 10px;border-radius:4px;font-size:13px;margin-left:8px;">
       <option value="static">静态预制DM（默认，零依赖）</option>
-      <option value="workerProxy">Cloudflare Worker代理（联机可用）</option>
+      <option value="direct">硅基流动直连（国内可用，推荐）</option>
+      <option value="workerProxy">Cloudflare Worker代理（需VPN）</option>
       <option value="ollama">本地Ollama（仅本机单机）</option>
     </select>
   </div>
+  <div id="aidmDirectArea" style="display:none;margin-bottom:10px;">
+    <label style="color:#a08060;font-size:13px;display:block;margin-bottom:4px;">硅基流动API Key：</label>
+    <input type="text" id="aidmApiKey" value="sk-zyalnzijngtveuuuttzstdotlwivhdggcnqajuqamakokiab" placeholder="sk-xxx" oninput="saveAidmConfig()" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
+    <label style="color:#a08060;font-size:13px;display:block;margin:8px 0 4px;">模型：</label>
+    <input type="text" id="aidmDirectModel" value="Qwen/Qwen2.5-7B-Instruct" placeholder="Qwen/Qwen2.5-7B-Instruct" oninput="saveAidmConfig()" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
+    <p style="color:#666;font-size:11px;margin-top:6px;">⚠️ 直连模式API Key会暴露在前端，仅适合熟人/私人游玩。硅基流动Qwen2.5-7B永久免费。</p>
+  </div>
   <div id="aidmWorkerArea" style="display:none;margin-bottom:10px;">
     <label style="color:#a08060;font-size:13px;display:block;margin-bottom:4px;">Worker代理地址：</label>
-    <input type="text" id="aidmWorkerUrl" value="https://wild-poetry-d1c9.1459545032.workers.dev/" placeholder="https://xxx.xxx.workers.dev" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
+    <input type="text" id="aidmWorkerUrl" value="https://wild-poetry-d1c9.1459545032.workers.dev/" placeholder="https://xxx.xxx.workers.dev" oninput="saveAidmConfig()" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
   </div>
   <div id="aidmOllamaArea" style="display:none;margin-bottom:10px;">
     <label style="color:#a08060;font-size:13px;display:block;margin-bottom:4px;">Ollama地址：</label>
-    <input type="text" id="aidmOllamaUrl" value="http://127.0.0.1:11434/v1/chat/completions" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
+    <input type="text" id="aidmOllamaUrl" value="http://127.0.0.1:11434/v1/chat/completions" oninput="saveAidmConfig()" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
     <label style="color:#a08060;font-size:13px;display:block;margin:8px 0 4px;">模型名：</label>
-    <input type="text" id="aidmModel" value="qwen2.5:7b" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
+    <input type="text" id="aidmModel" value="qwen2.5:7b" oninput="saveAidmConfig()" style="width:100%;padding:8px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px;">
   </div>
   <div style="margin-top:10px;">
     <button class="btn btn-primary" onclick="saveAidmConfig()" style="padding:8px 20px;font-size:12px;">保存AI-DM设置</button>
@@ -424,6 +445,12 @@ body.day-mode .btn-secondary{background:#fff;color:#5a3a2a;border:1px solid #c9b
     <div><span id="lobbyPlayerName"></span> <span id="hostBadge" class="hidden" style="color:#8b0000">[主持人]</span></div>
   </div>
   <div class="player-list scrollbar" id="playerList"></div>
+  <!-- 角色选择区 -->
+  <div id="charSelectArea" style="margin:15px 20px;padding:15px;background:rgba(20,10,10,0.8);border:1px solid #3a2020;border-radius:8px;">
+    <div style="color:#a08060;font-size:14px;margin-bottom:10px;font-weight:bold;">🎭 选择你的角色（点击选择，不可重复）</div>
+    <div id="charSelectGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+    <div id="myCharSelected" style="margin-top:10px;color:#d4a060;font-size:13px;display:none;">你已选择：<span id="myCharName" style="color:#2ecc71;font-weight:bold;"></span></div>
+  </div>
   <div class="lobby-footer">
     <button class="btn" onclick="toggleReady()" id="readyBtn">准备</button>
     <button class="btn btn-primary hidden" id="startBtn" onclick="startGame()">开始游戏（需全部准备）</button>
@@ -941,6 +968,7 @@ function fbListenRoom(){
       id:id,
       name:p.name,
       charId:p.charId,
+      selectedChar:p.selectedChar||null,
       ready:p.ready,
       isHost:p.isHost
     }));
@@ -1326,13 +1354,18 @@ function toggleReady(){
 
 function updateLobby(){
   const list=document.getElementById('playerList');
-  list.innerHTML=gameState.players.map(p=>`
+  list.innerHTML=gameState.players.map(p=>{
+    const selectedChar=SCRIPT.characters.find(c=>c.id===p.selectedChar);
+    return `
     <div class="player-card ${p.ready?'ready':''}">
       <div class="avatar">${p.name.charAt(0)}</div>
       <div class="name">${p.name}</div>
       <div class="status">${p.ready?'已准备':'等待中'}</div>
+      ${selectedChar?`<div class="status" style="color:#d4a060;font-size:11px;margin-top:4px;">🎭 ${selectedChar.name}</div>`:''}
     </div>
-  `).join('');
+  `}).join('');
+  // 刷新角色选择界面
+  renderCharSelect();
   if(gameState.isHost){
     const allReady=gameState.players.length>=5&&gameState.players.every(p=>p.ready);
     document.getElementById('startBtn').classList.toggle('hidden',!allReady);
@@ -1546,10 +1579,29 @@ function switchSoloChar(charId){
 // ==================== 游戏流程 ====================
 function startGame(){
   if(!gameState.isHost)return;
-  // 自动分配角色
-  const charIds=SCRIPT.characters.map(c=>c.id);
-  shuffle(charIds);
-  gameState.players.forEach((p,i)=>{p.charId=charIds[i%charIds.length];p.ready=false;});
+  // 角色分配：优先使用玩家选择的角色，未选择的随机分配
+  const allCharIds=SCRIPT.characters.map(c=>c.id);
+  const usedChars=new Set();
+  // 先分配已选择的角色
+  gameState.players.forEach(p=>{
+    if(p.selectedChar && allCharIds.includes(p.selectedChar) && !usedChars.has(p.selectedChar)){
+      p.charId=p.selectedChar;
+      usedChars.add(p.selectedChar);
+    }else{
+      p.charId=null;
+    }
+  });
+  // 未选择的玩家随机分配剩余角色
+  const remainingChars=allCharIds.filter(c=>!usedChars.has(c));
+  shuffle(remainingChars);
+  let idx=0;
+  gameState.players.forEach(p=>{
+    if(!p.charId){
+      p.charId=remainingChars[idx%remainingChars.length];
+      idx++;
+    }
+    p.ready=false;
+  });
   // 更新房主自己的角色ID
   const hostPlayer=gameState.players.find(p=>p.id==='host'||p.isHost);
   if(hostPlayer)gameState.myCharId=hostPlayer.charId;
@@ -1559,12 +1611,81 @@ function startGame(){
   if(gameState.fbRoomRef){
     const playersUpdate={};
     gameState.players.forEach(p=>{
-      playersUpdate[p.id]={name:p.name,charId:p.charId,ready:p.ready,isHost:p.isHost};
+      playersUpdate[p.id]={name:p.name,charId:p.charId,selectedChar:p.selectedChar||null,ready:p.ready,isHost:p.isHost};
     });
     gameState.fbRoomRef.child('players').set(playersUpdate);
   }
   broadcastState();
   startCG();
+}
+
+// 渲染角色选择界面
+function renderCharSelect(){
+  const grid=document.getElementById('charSelectGrid');
+  if(!grid)return;
+  const myPlayer=gameState.players.find(p=>p.id===gameState.myPlayerId||p.name===gameState.myName);
+  const mySelectedChar=myPlayer?myPlayer.selectedChar:null;
+  // 统计已被选择的角色
+  const takenChars={};
+  gameState.players.forEach(p=>{
+    if(p.selectedChar){
+      takenChars[p.selectedChar]=p.name;
+    }
+  });
+  let html='';
+  SCRIPT.characters.forEach(c=>{
+    const isTaken=takenChars[c.id] && takenChars[c.id]!==gameState.myName;
+    const isMySelect=mySelectedChar===c.id;
+    let cls='char-card';
+    if(isMySelect)cls+=' selected';
+    else if(isTaken)cls+=' taken';
+    html+=`<div class="${cls}" onclick="selectChar('${c.id}')">`;
+    if(isMySelect)html+=`<div class="char-selected-tag">已选</div>`;
+    else if(isTaken)html+=`<div class="char-taken-by">${takenChars[c.id]}</div>`;
+    html+=`<div class="char-avatar">${c.avatar}</div>`;
+    html+=`<div class="char-name">${c.name}</div>`;
+    html+=`<div class="char-gender">${c.gender} · ${c.age}岁</div>`;
+    html+=`<div class="char-desc">${c.desc.substring(0,30)}...</div>`;
+    html+=`</div>`;
+  });
+  grid.innerHTML=html;
+  // 显示已选择的角色
+  const myCharSelectedEl=document.getElementById('myCharSelected');
+  const myCharNameEl=document.getElementById('myCharName');
+  if(mySelectedChar){
+    const char=SCRIPT.characters.find(c=>c.id===mySelectedChar);
+    if(char){
+      myCharNameEl.textContent=char.name;
+      myCharSelectedEl.style.display='block';
+    }
+  }else{
+    myCharSelectedEl.style.display='none';
+  }
+}
+
+// 选择角色
+function selectChar(charId){
+  const myPlayer=gameState.players.find(p=>p.id===gameState.myPlayerId||p.name===gameState.myName);
+  if(!myPlayer)return;
+  // 检查角色是否已被其他玩家选择
+  const takenBy=gameState.players.find(p=>p.selectedChar===charId && p.id!==myPlayer.id);
+  if(takenBy){
+    notify('该角色已被'+takenBy.name+'选择');
+    return;
+  }
+  // 切换选择
+  if(myPlayer.selectedChar===charId){
+    myPlayer.selectedChar=null;
+  }else{
+    myPlayer.selectedChar=charId;
+  }
+  // 同步到Firebase
+  if(gameState.fbRoomRef){
+    gameState.fbRoomRef.child('players/'+myPlayer.id+'/selectedChar').set(myPlayer.selectedChar);
+  }
+  broadcastState();
+  renderCharSelect();
+  renderPlayerList();
 }
 
 function shuffle(arr){
@@ -2476,12 +2597,14 @@ function aiChatReactToClue(clueId){
 
 // ==================== AI-DM 动态大模型主持系统（含自动降级） ====================
 const AIDM_CONFIG = {
-  mode:'workerProxy',
+  mode:'direct',
   workerUrl:'https://wild-poetry-d1c9.1459545032.workers.dev/',
   ollamaUrl:'http://127.0.0.1:11434/v1/chat/completions',
   model:'Qwen/Qwen2.5-7B-Instruct',
   ollamaModel:'qwen2.5:7b',
-  timeoutMs:12000,
+  apiKey:'sk-zyalnzijngtveuuuttzstdotlwivhdggcnqajuqamakokiab',
+  directUrl:'https://api.siliconflow.cn/v1/chat/completions',
+  timeoutMs:15000,
   degraded:false,
   lastAidmTime:0,
   cooldownMs:8000
@@ -2523,13 +2646,17 @@ async function callAIDM(userText){
   if(AIDM_CONFIG.degraded || AIDM_CONFIG.mode === 'static'){
     return getStaticDmText(gameState.currentAct);
   }
-  let fetchUrl, model;
+  let fetchUrl, model, headers={'Content-Type':'application/json'};
   if(AIDM_CONFIG.mode === 'ollama'){
     fetchUrl = AIDM_CONFIG.ollamaUrl;
     model = AIDM_CONFIG.ollamaModel;
   }else if(AIDM_CONFIG.mode === 'workerProxy'){
     fetchUrl = AIDM_CONFIG.workerUrl;
     model = AIDM_CONFIG.model;
+  }else if(AIDM_CONFIG.mode === 'direct'){
+    fetchUrl = AIDM_CONFIG.directUrl;
+    model = AIDM_CONFIG.model;
+    headers['Authorization'] = 'Bearer ' + AIDM_CONFIG.apiKey;
   }else{
     return getStaticDmText(gameState.currentAct);
   }
@@ -2541,7 +2668,7 @@ async function callAIDM(userText){
   const controller = new AbortController();
   const timer = setTimeout(()=>controller.abort(),AIDM_CONFIG.timeoutMs);
   try{
-    const resp = await fetch(fetchUrl,{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const resp = await fetch(fetchUrl,{method:'POST',signal:controller.signal,headers:headers,body:JSON.stringify(payload)});
     clearTimeout(timer);
     if(!resp.ok){
       if(resp.status === 429){
@@ -2584,6 +2711,7 @@ async function triggerAidmResponse(){
 }
 function onAidmModeChange(){
   const mode = document.getElementById('aidmModeSelect').value;
+  document.getElementById('aidmDirectArea').style.display = mode==='direct'?'block':'none';
   document.getElementById('aidmWorkerArea').style.display = mode==='workerProxy'?'block':'none';
   document.getElementById('aidmOllamaArea').style.display = mode==='ollama'?'block':'none';
 }
@@ -2592,16 +2720,23 @@ function saveAidmConfig(){
   const workerUrl = document.getElementById('aidmWorkerUrl').value.trim();
   const ollamaUrl = document.getElementById('aidmOllamaUrl').value.trim();
   const model = document.getElementById('aidmModel').value.trim();
+  const apiKey = document.getElementById('aidmApiKey').value.trim();
+  const directModel = document.getElementById('aidmDirectModel').value.trim();
   AIDM_CONFIG.mode = mode;
   AIDM_CONFIG.workerUrl = workerUrl;
   AIDM_CONFIG.ollamaUrl = ollamaUrl;
   AIDM_CONFIG.ollamaModel = model || 'qwen2.5:7b';
+  AIDM_CONFIG.apiKey = apiKey;
+  AIDM_CONFIG.model = directModel || 'Qwen/Qwen2.5-7B-Instruct';
   AIDM_CONFIG.degraded = false;
-  localStorage.setItem('minghun_aidm_config',JSON.stringify({mode,workerUrl,ollamaUrl,model}));
+  localStorage.setItem('minghun_aidm_config',JSON.stringify({mode,workerUrl,ollamaUrl,model,apiKey,directModel}));
   const status = document.getElementById('aidmStatus');
   if(mode==='static'){
     status.textContent = '✓ 已设置为静态预制DM模式';
     status.style.color = '#2ecc71';
+  }else if(mode==='direct' && !apiKey){
+    status.textContent = '✗ 请填写硅基流动API Key';
+    status.style.color = '#e74c3c';
   }else if(mode==='workerProxy' && !workerUrl){
     status.textContent = '✗ 请填写Worker代理地址';
     status.style.color = '#e74c3c';
@@ -2618,15 +2753,19 @@ function loadAidmConfig(){
     const saved = localStorage.getItem('minghun_aidm_config');
     if(saved){
       const cfg = JSON.parse(saved);
-      AIDM_CONFIG.mode = cfg.mode || 'workerProxy';
+      AIDM_CONFIG.mode = cfg.mode || 'direct';
       AIDM_CONFIG.workerUrl = cfg.workerUrl || 'https://wild-poetry-d1c9.1459545032.workers.dev/';
       AIDM_CONFIG.ollamaUrl = cfg.ollamaUrl || 'http://127.0.0.1:11434/v1/chat/completions';
       AIDM_CONFIG.ollamaModel = cfg.model || 'qwen2.5:7b';
+      AIDM_CONFIG.apiKey = cfg.apiKey || 'sk-zyalnzijngtveuuuttzstdotlwivhdggcnqajuqamakokiab';
+      AIDM_CONFIG.model = cfg.directModel || 'Qwen/Qwen2.5-7B-Instruct';
     }
     document.getElementById('aidmModeSelect').value = AIDM_CONFIG.mode;
     document.getElementById('aidmWorkerUrl').value = AIDM_CONFIG.workerUrl;
     document.getElementById('aidmOllamaUrl').value = AIDM_CONFIG.ollamaUrl;
     document.getElementById('aidmModel').value = AIDM_CONFIG.ollamaModel;
+    document.getElementById('aidmApiKey').value = AIDM_CONFIG.apiKey;
+    document.getElementById('aidmDirectModel').value = AIDM_CONFIG.model;
     onAidmModeChange();
   }catch(e){}
 }
