@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>覃秋宜黄立康崖微铭林养橙四人大战 - 民国冥婚变格剧本杀</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei',sans-serif;background:#0a0a0a;color:#d4c5a9;overflow:hidden;height:100vh}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.screen.active{display:flex}
+
+/* 首页 */
+#home{background:radial-gradient(ellipse at center,#1a0a0a 0%,#0a0a0a 70%);align-items:center;justify-content:flex-start;text-align:center;padding-top:20px;overflow-y:auto}
+#home h1{font-size:72px;color:#8b0000;text-shadow:0 0 30px #8b0000,0 0 60px #4a0000;letter-spacing:20px;margin-bottom:10px;animation:flicker 3s infinite}
+#home .subtitle{color:#666;font-size:16px;letter-spacing:8px;margin-bottom:50px}
+@keyframes flicker{0%,100%{opacity:1}50%{opacity:0.85}52%{opacity:0.6}54%{opacity:1}}
+.home-theme-btn{position:absolute;top:15px;right:15px;z-index:10}
+.home-box{background:rgba(20,10,10,0.9);border:1px solid #3a2020;border-radius:8px;padding:30px 40px;width:400px;max-width:90vw}
+.home-box h3{color:#a08060;margin-bottom:20px;font-size:18px}
+.home-box input{width:100%;padding:12px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;margin-bottom:12px;font-size:14px}
+.home-box input:focus{outline:none;border-color:#8b0000}
+.btn{padding:12px 24px;background:linear-gradient(135deg,#4a0000,#2a0000);border:1px solid #6a2020;color:#d4c5a9;border-radius:4px;cursor:pointer;font-size:14px;transition:all 0.3s;letter-spacing:2px}
+.btn:hover{background:linear-gradient(135deg,#6a0000,#4a0000);box-shadow:0 0 15px rgba(139,0,0,0.5)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#8b0000,#5a0000);border-color:#a02020}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.divider{display:flex;align-items:center;margin:15px 0;color:#555;font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#333}
+.divider span{padding:0 10px}
+
+/* 等待室 */
+#lobby{background:#0a0a0a;padding:20px}
+.lobby-header{display:flex;justify-content:space-between;align-items:center;padding:calc(15px + env(safe-area-inset-top)) 20px 15px;background:rgba(20,10,10,0.9);border:1px solid #3a2020;border-radius:8px;margin-bottom:20px}
+.room-id{color:#a08060;font-size:14px}
+.room-id span{color:#d4a060;font-weight:bold;font-size:18px;letter-spacing:2px}
+.player-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;flex:1;overflow-y:auto;padding:10px}
+.player-card{background:rgba(20,10,10,0.8);border:1px solid #3a2020;border-radius:8px;padding:15px;text-align:center;transition:all 0.3s}
+.player-card.ready{border-color:#2a6a2a;box-shadow:0 0 10px rgba(42,106,42,0.3)}
+.player-card .avatar{width:50px;height:50px;border-radius:50%;background:#2a1a1a;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.player-card .name{color:#d4c5a9;font-size:14px;margin-bottom:4px}
+.player-card .status{font-size:12px;color:#666}
+.player-card.ready .status{color:#4a8a4a}
+.lobby-footer{text-align:center;padding:15px}
+
+/* 开场CG */
+#cg{background:#000;align-items:center;justify-content:center;text-align:center;position:relative;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box}
+.cg-text{font-size:24px;color:#8b0000;max-width:700px;line-height:2;opacity:0;transition:opacity 1.5s;text-shadow:0 0 20px #4a0000;margin:auto 0;padding:0 20px}
+.cg-text.show{opacity:1}
+.cg-skip{position:absolute;bottom:30px;right:30px;color:#555;font-size:12px;cursor:pointer}
+
+/* 游戏主界面 */
+#game{background:#0a0a0a}
+.game-header{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 20px 10px;background:rgba(15,8,8,0.95);border-bottom:1px solid #2a1515;z-index:10}
+.act-title{color:#a08060;font-size:16px;letter-spacing:2px}
+.player-info{display:flex;align-items:center;gap:10px;font-size:13px}
+.player-info .char-name{color:#d4a060;font-weight:bold}
+.game-body{flex:1;display:flex;overflow:hidden}
+.sidebar{width:220px;background:rgba(15,8,8,0.9);border-right:1px solid #2a1515;display:flex;flex-direction:column}
+.sidebar-tab{padding:12px 16px;border-bottom:1px solid #1a0f0f;cursor:pointer;font-size:13px;color:#888;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center}
+.sidebar-tab:hover{background:rgba(60,20,20,0.3);color:#aaa}
+.sidebar-tab.active{background:rgba(80,20,20,0.4);color:#d4a060;border-left:3px solid #8b0000}
+.sidebar-tab .badge{background:#8b0000;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.content-area{flex:1;overflow-y:auto;padding:20px}
+.chat-area{height:210px;background:rgba(10,5,5,0.9);border-top:1px solid #2a1515;display:flex;flex-direction:column}
+.chat-header{padding:6px 15px;background:rgba(30,15,15,0.95);border-bottom:1px solid #3a2020;font-size:12px;color:#888;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.chat-header .chat-title{color:#a08060;font-weight:bold;letter-spacing:1px}
+.chat-header .chat-role{color:#d4a060}
+.chat-header .chat-role .role-avatar{margin-right:4px}
+.chat-messages{flex:1;overflow-y:auto;padding:10px 15px;font-size:13px}
+.chat-msg{margin-bottom:6px;line-height:1.5}
+.chat-msg .sender{color:#a08060;font-weight:bold;margin-right:6px}
+.chat-msg.system{color:#8b0000;font-style:italic}
+.chat-msg.dm{color:#d4a060;background:rgba(139,0,0,0.08);padding:8px 12px;border-radius:6px;border-left:3px solid #8b0000;margin:8px 0}
+.chat-msg.dm .sender{color:#8b0000;font-weight:bold}
+.chat-msg.dm .dm-tag{display:inline-block;background:#8b0000;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:middle}
+.dm-typing{color:#666;font-style:italic;font-size:12px;padding:4px 0}
+.chat-input{display:flex;padding:8px;border-top:1px solid #2a1515}
+.chat-input input{flex:1;padding:8px 12px;background:#1a1010;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:13px}
+.chat-input input:focus{outline:none;border-color:#8b0000}
+.chat-input button{margin-left:8px;padding:8px 16px}
+
+/* 剧本内容 */
+.script-content{background:rgba(20,10,10,0.6);border:1px solid #2a1515;border-radius:8px;padding:25px;line-height:2;font-size:14px}
+.script-content h3{color:#a08060;margin-bottom:15px;font-size:18px;border-bottom:1px solid #2a1515;padding-bottom:8px}
+.script-content .secret{background:rgba(80,20,20,0.3);border-left:3px solid #8b0000;padding:12px;margin:12px 0;border-radius:0 4px 4px 0}
+.script-content .secret-label{color:#8b0000;font-weight:bold;font-size:12px;margin-bottom:4px}
+
+/* 线索 */
+.clue-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.clue-card{background:rgba(20,10,10,0.8);border:1px solid #3a2020;border-radius:8px;padding:15px;cursor:pointer;transition:all 0.3s}
+.clue-card:hover{border-color:#8b0000;transform:translateY(-2px)}
+.clue-card.locked{opacity:0.5;cursor:not-allowed}
+.clue-card .clue-title{color:#d4a060;font-weight:bold;margin-bottom:8px;font-size:14px}
+.clue-card .clue-desc{color:#888;font-size:12px;line-height:1.6}
+.clue-card.unlocked .clue-desc{color:#bbb}
+.clue-detail{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:100}
+.clue-detail.show{display:flex}
+.clue-detail-box{background:#1a0f0f;border:1px solid #5a2020;border-radius:8px;padding:30px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.clue-detail-box h3{color:#d4a060;margin-bottom:15px;font-size:20px}
+.clue-detail-box p{line-height:1.8;color:#bbb;font-size:14px;margin-bottom:10px}
+
+/* 私聊 */
+.pm-list{display:flex;flex-direction:column;gap:8px}
+.pm-user{padding:12px;background:rgba(20,10,10,0.6);border:1px solid #2a1515;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.pm-user:hover{border-color:#5a2020}
+.pm-window{position:fixed;bottom:200px;right:20px;width:300px;height:400px;background:#1a0f0f;border:1px solid #5a2020;border-radius:8px;display:none;flex-direction:column;z-index:50}
+.pm-window.show{display:flex}
+.pm-header{padding:10px 15px;background:rgba(80,20,20,0.3);border-bottom:1px solid #3a2020;display:flex;justify-content:space-between;align-items:center}
+.pm-header .close{cursor:pointer;color:#888}
+.pm-messages{flex:1;overflow-y:auto;padding:10px;font-size:13px}
+.pm-msg{margin-bottom:8px}
+.pm-msg .sender{color:#a08060;font-weight:bold;font-size:11px}
+.pm-input{display:flex;padding:8px;border-top:1px solid #2a1515}
+.pm-input input{flex:1;padding:6px 10px;background:#0f0808;border:1px solid #3a2020;color:#d4c5a9;border-radius:4px;font-size:12px}
+
+/* 投票 */
+.vote-area{text-align:center}
+.vote-area h3{color:#a08060;margin-bottom:20px;font-size:20px}
+.vote-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;max-width:700px;margin:0 auto 20px}
+.vote-option{padding:20px;background:rgba(20,10,10,0.8);border:2px solid #3a2020;border-radius:8px;cursor:pointer;transition:all 0.3s}
+.vote-option:hover{border-color:#8b0000}
+.vote-option.selected{border-color:#8b0000;background:rgba(80,20,20,0.4)}
+.vote-option .vname{color:#d4a060;font-weight:bold;font-size:16px;margin-bottom:4px}
+.vote-option .vrole{color:#666;font-size:12px}
+.vote-result{margin-top:20px;padding:20px;background:rgba(20,10,10,0.6);border-radius:8px}
+
+/* 结局 */
+#ending{background:#000;align-items:center;justify-content:flex-start;text-align:center;padding:30px 20px;overflow-y:auto}
+.ending-title{font-size:42px;color:#c41e1e;text-shadow:0 0 20px rgba(196,30,30,0.5);margin:20px 0 30px;letter-spacing:8px;font-weight:bold;padding:15px 30px;border:2px solid #8b0000;border-radius:8px;display:inline-block;background:rgba(139,0,0,0.1)}
+.ending-text{max-width:700px;line-height:2.2;font-size:15px;color:#bbb;margin-bottom:30px;text-align:left}
+.ending-btn{margin-top:20px}
+.ending-label{font-size:14px;color:#888;margin-bottom:10px;letter-spacing:4px}
+
+/* 复盘 */
+#review{background:#0a0a0a;padding:30px;overflow-y:auto}
+.review-header{text-align:center;margin-bottom:30px}
+.review-header h2{color:#8b0000;font-size:32px;letter-spacing:8px;margin-bottom:10px}
+.review-section{background:rgba(20,10,10,0.6);border:1px solid #2a1515;border-radius:8px;padding:25px;margin-bottom:20px;line-height:2;font-size:14px}
+.review-section h3{color:#a08060;margin-bottom:15px;font-size:18px;border-bottom:1px solid #2a1515;padding-bottom:8px}
+.review-section h4{color:#d4a060;margin:15px 0 8px;font-size:15px}
+
+/* 通用 */
+.hidden{display:none!important}
+.scrollbar::-webkit-scrollbar{width:6px}
+.scrollbar::-webkit-scrollbar-track{background:#0a0505}
+.scrollbar::-webkit-scrollbar-thumb{background:#3a2020;border-radius:3px}
+.timer{color:#8b0000;font-weight:bold}
+.notification{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(80,20,20,0.95);border:1px solid #8b0000;color:#d4c5a9;padding:12px 24px;border-radius:6px;z-index:200;animation:slideDown 0.3s}
+@keyframes slideDown{from{top:-50px;opacity:0}to{top:20px;opacity:1}}
+
+/* 单人模式角色切换器 */
+.solo-char-switch{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.solo-char-btn{padding:4px 10px;background:rgba(40,20,20,0.8);border:1px solid #3a2020;color:#888;border-radius:4px;cursor:pointer;font-size:11px;transition:all 0.2s}
+.solo-char-btn:hover{border-color:#5a3030;color:#aaa}
+.solo-char-btn.active{background:rgba(80,20,20,0.6);border-color:#8b0000;color:#d4a060}
+.solo-badge{background:#2a6a2a;color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;margin-left:6px}
+.music-toggle{background:rgba(40,20,20,0.8);border:1px solid #3a2020;color:#d4a060;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;margin-left:8px}
+.music-toggle:hover{background:rgba(80,20,20,0.6);border-color:#8b0000}
+.music-toggle.playing{color:#8b0000;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+
+/* ============ 响应式：手机端 ============ */
+@media (max-width: 768px){
+  #home h1{font-size:40px;letter-spacing:8px;margin-bottom:8px}
+  #home .subtitle{font-size:12px;letter-spacing:4px}
+  .home-box{width:90vw;padding:20px}
+  .home-box h3{font-size:16px}
+  .btn{padding:14px 20px;font-size:14px;min-height:44px}
+  .home-box input{padding:14px;font-size:16px}
+
+  .lobby-header{padding:10px 12px;font-size:13px;flex-wrap:wrap;gap:8px}
+  .room-id span{font-size:16px}
+  .player-list{grid-template-columns:repeat(2,1fr);gap:8px;padding:8px}
+  .player-card{padding:12px 8px}
+  .player-card .avatar{width:40px;height:40px;font-size:20px}
+  .player-card .name{font-size:13px}
+  .lobby-footer{padding:12px;display:flex;gap:8px}
+  .lobby-footer .btn{flex:1}
+
+  .cg-text{font-size:18px;padding:0 20px;line-height:1.8}
+
+  .game-header{padding:8px 12px;font-size:12px;flex-wrap:wrap;gap:4px}
+  .act-title{font-size:14px}
+  .player-info{font-size:12px}
+  .game-body{flex-direction:column}
+  .sidebar{width:100%;height:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:none;border-bottom:1px solid #2a1515}
+  .sidebar-tab{padding:10px 14px;border-bottom:none;border-right:1px solid #1a0f0f;white-space:nowrap;font-size:12px;min-width:fit-content}
+  .sidebar-tab.active{border-left:none;border-bottom:3px solid #8b0000}
+  .main-area{flex:1}
+  .content-area{padding:12px}
+  .chat-area{height:220px}
+  .chat-messages{padding:8px 10px;font-size:12px}
+  .chat-input input{padding:10px;font-size:14px}
+  .chat-input button{padding:10px 14px;font-size:13px}
+
+  .script-content{padding:15px;font-size:13px;line-height:1.8}
+  .script-content h3{font-size:16px}
+  .clue-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .clue-card{padding:10px}
+  .clue-card .clue-title{font-size:13px}
+  .clue-card .clue-desc{font-size:11px}
+  .clue-detail-box{width:95%;padding:20px}
+  .clue-detail-box h3{font-size:18px}
+  .clue-detail-box p{font-size:13px}
+
+  .pm-window{width:90vw;right:5vw;left:5vw;height:60vh;bottom:120px}
+  .pm-user{padding:10px;font-size:13px}
+
+  .vote-options{grid-template-columns:1fr;gap:8px}
+  .vote-option{padding:14px}
+  .vote-option .vname{font-size:14px}
+
+  .ending-title{font-size:26px;letter-spacing:4px;padding:10px 20px;margin:15px 0 20px}
+  .ending-text{font-size:13px;line-height:2;padding:0 15px}
+  .ending-label{font-size:12px}
+  .review-section{padding:15px;font-size:13px;line-height:1.8}
+  .review-header h2{font-size:24px;letter-spacing:4px}
+
+  .top-bar-buttons{gap:6px}
+  .top-btn{width:32px;height:32px;font-size:14px}
+}
+
+@media (max-width: 480px){
+  #home h1{font-size:30px;letter-spacing:4px;margin-bottom:6px}
+  .player-list{grid-template-columns:1fr}
+  .clue-grid{grid-template-columns:1fr}
+  .cg-text{font-size:16px}
+}
+
+/* Firebase配置面板 */
+.firebase-config{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;margin:12px 0;}
+.firebase-config h4{color:#e74c3c;margin-bottom:10px;font-size:14px;}
+.firebase-config textarea{width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px;color:#fff;font-size:11px;font-family:monospace;resize:vertical;min-height:80px;box-sizing:border-box;}
+.firebase-config .hint{font-size:11px;color:#888;margin-top:8px;line-height:1.6;}
+.firebase-status{font-size:12px;padding:6px 12px;border-radius:6px;margin-top:8px;display:inline-block;}
+.firebase-status.ok{background:rgba(46,204,113,0.2);color:#2ecc71;}
+.firebase-status.err{background:rgba(231,76,60,0.2);color:#e74c3c;}
+.net-mode-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.net-mode-tab{flex:1;padding:10px;text-align:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;font-size:13px;color:#aaa;transition:all 0.2s;}
+.net-mode-tab.active{background:rgba(231,76,60,0.2);border-color:#e74c3c;color:#fff;}
+
+/* 日间模式 */
+body.day-mode{background:#f5f0e8;color:#3a2a1a}
+body.day-mode #home{background:radial-gradient(ellipse at center,#e8ddd0 0%,#f5f0e8 70%)}
+body.day-mode .home-theme-btn{background:rgba(255,255,255,0.8);color:#5a3a2a;border:1px solid #c9b89a}
+body.day-mode #home h1{color:#5a3a2a;text-shadow:0 0 20px rgba(90,58,42,0.3)}
+body.day-mode .subtitle{color:#7a5a4a}
+body.day-mode .home-box{background:rgba(255,255,255,0.9);border:1px solid #c9b89a}
+body.day-mode .home-box h3{color:#5a3a2a}
+body.day-mode input{background:#fff;color:#3a2a1a;border:1px solid #c9b89a}
+body.day-mode #lobby{background:#f5f0e8}
+body.day-mode .lobby-player{background:rgba(255,255,255,0.9);border:1px solid #c9b89a;color:#3a2a1a}
+body.day-mode .game-header{background:rgba(245,240,232,0.95);border-bottom:1px solid #c9b89a}
+body.day-mode .act-title{color:#7a5a3a}
+body.day-mode .player-info{color:#3a2a1a}
+body.day-mode .player-info .char-name{color:#8a5a2a}
+body.day-mode .sidebar{background:rgba(245,240,232,0.9);border-right:1px solid #c9b89a}
+body.day-mode .sidebar-tab{color:#5a4a3a;border-bottom:1px solid #d9c8aa}
+body.day-mode .sidebar-tab:hover{background:rgba(200,180,150,0.3)}
+body.day-mode .sidebar-tab.active{background:#fff;border-bottom:3px solid #8a5a2a;color:#5a3a1a}
+body.day-mode .content-area{color:#3a2a1a}
+body.day-mode .chat-area{background:rgba(255,255,255,0.9);border-top:1px solid #c9b89a}
+body.day-mode .chat-header{background:rgba(245,240,232,0.98);border-bottom:1px solid #c9b89a;color:#7a6a5a}
+body.day-mode .chat-header .chat-title{color:#5a3a1a}
+body.day-mode .chat-header .chat-role{color:#8a5a2a}
+body.day-mode .chat-messages{color:#3a2a1a}
+body.day-mode .chat-msg .sender{color:#7a5a3a}
+body.day-mode .chat-msg.dm .sender{color:#8a2a2a}
+body.day-mode .chat-msg.system{color:#6a6a6a}
+body.day-mode .chat-input input{background:#fff;color:#3a2a1a;border:1px solid #c9b89a}
+body.day-mode #cg{background:#f5f0e8}
+body.day-mode #cgText{color:#3a2a1a}
+body.day-mode #ending{background:#f5f0e8;color:#3a2a1a}
+body.day-mode #review{background:#f5f0e8;color:#3a2a1a}
+body.day-mode .scrollbar::-webkit-scrollbar-thumb{background:#c9b89a}
+/* 房间号和语音选择 */
+.room-info{display:flex;align-items:center;gap:8px;margin-right:auto}
+.room-id-display{font-size:13px;color:#a08060;background:rgba(0,0,0,0.3);padding:4px 10px;border-radius:4px}
+.voice-select{background:rgba(30,20,20,0.9);color:#d4c4a8;border:1px solid #5a4030;border-radius:4px;padding:4px 6px;font-size:12px;cursor:pointer;max-width:120px}
+.voice-select option{background:#1a1210;color:#d4c4a8}
+/* 玩家列表面板 */
+.player-list-panel{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(20,15,15,0.97);border:1px solid #5a4030;border-radius:8px;padding:0;z-index:1000;min-width:280px;max-width:90vw;display:none;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.player-list-panel.show{display:block}
+.player-list-header{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid #3a2820;color:#a08060;font-weight:bold}
+.player-list-content{padding:10px 15px;max-height:60vh;overflow-y:auto}
+.player-list-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2a1f18;color:#d4c4a8;font-size:14px}
+.player-list-item:last-child{border-bottom:none}
+.player-list-item .player-role{color:#8a6a4a;font-size:12px}
+.player-list-item.host-badge{color:#c9a04a;font-size:11px;margin-left:6px}
+/* 日间模式补全 */
+body.day-mode .room-id-display{color:#5a3a2a;background:rgba(255,255,255,0.7)}
+body.day-mode .voice-select{background:#fff;color:#3a2a1a;border:1px solid #c9b89a}
+body.day-mode .voice-select option{background:#fff;color:#3a2a1a}
+body.day-mode .player-list-panel{background:rgba(255,250,245,0.98);border:1px solid #c9b89a}
+body.day-mode .player-list-header{border-bottom:1px solid #d9c8aa;color:#5a3a2a}
+body.day-mode .player-list-item{border-bottom:1px solid #e8dcc8;color:#3a2a1a}
+body.day-mode .player-list-item .player-role{color:#7a5a3a}
+body.day-mode .script-content{background:rgba(255,255,255,0.9);border-color:#c9b89a;color:#3a2a1a}
+body.day-mode .script-content h3,body.day-mode .script-content h4{color:#5a3a1a;border-color:#d9c8aa}
+body.day-mode .script-content .secret{background:rgba(139,42,42,0.08);border-left-color:#8a2a2a}
+body.day-mode .script-content p[style*="color:#888"],body.day-mode .script-content p[style*="color:#ccc"]{color:#5a4a3a!important}
+body.day-mode .script-content h4[style*="color:#a08060"]{color:#7a5a3a!important}
+body.day-mode .script-content div[style*="background:#1a1a1a"]{background:rgba(255,255,255,0.7)!important;border-left-color:#8a5a2a!important}
+body.day-mode .clue-card{background:rgba(255,255,255,0.9);border:1px solid #c9b89a;color:#3a2a1a}
+body.day-mode .clue-card.locked{opacity:0.6}
+body.day-mode .clue-detail-box{background:#f5f0e8;color:#3a2a1a;border:1px solid #c9b89a}
+body.day-mode .vote-option{background:rgba(255,255,255,0.9);border:1px solid #c9b89a;color:#3a2a1a}
+body.day-mode .vote-option.selected{border-color:#8a5a2a;background:#fff}
+body.day-mode .vote-option .vname{color:#5a3a1a}
+body.day-mode .vote-option .vrole{color:#7a5a4a}
+body.day-mode .pm-user{background:rgba(255,255,255,0.8);border:1px solid #c9b89a;color:#3a2a1a}
+body.day-mode .pm-chat{background:rgba(255,255,255,0.9);border:1px solid #c9b89a}
+body.day-mode .pm-msg{color:#3a2a1a}
+body.day-mode .pm-input input{background:#fff;color:#3a2a1a;border:1px solid #c9b89a}
+body.day-mode .sticky-note{background:#fff8e0;color:#3a2a1a;border:1px solid #d9c890}
+body.day-mode .diary-entry{background:rgba(255,255,255,0.8);border-left:3px solid #8a5a2a;color:#3a2a1a}
+body.day-mode .secret-label{color:#8a2a2a}
+body.day-mode .btn{background:#8a5a2a;color:#fff}
+body.day-mode .btn:hover{background:#a06a3a}
+body.day-mode .btn-primary{background:#6a4a2a}
+body.day-mode .ending-title{color:#8b2a2a;border-color:#8b2a2a;background:rgba(139,42,42,0.08);text-shadow:0 0 10px rgba(139,42,42,0.2)}
+body.day-mode .ending-label{color:#7a5a4a}
+body.day-mode .review-section{background:rgba(255,255,255,0.8);border:1px solid #c9b89a;color:#3a2a1a}
+body.day-mode .review-section h3{color:#5a3a1a}
+body.day-mode .review-section h4{color:#7a4a2a}
+body.day-mode .solo-char-btn{background:rgba(255,255,255,0.8);border-color:#c9b89a;color:#5a4a3a}
+body.day-mode .solo-char-btn:hover{border-color:#8a6a4a;color:#3a2a1a}
+body.day-mode .solo-char-btn.active{background:#fff;border-color:#8a5a2a;color:#5a3a1a}
+body.day-mode .content-area{background:#f5f0e8}
+body.day-mode .main-area{background:#f5f0e8}
+body.day-mode .game-body{background:#f5f0e8}
+body.day-mode .btn-primary{background:#8a5a2a;color:#fff}
+body.day-mode .btn-secondary{background:#fff;color:#5a3a2a;border:1px solid #c9b89a}
+
+</style>
+</head>
+<body>
+
+<!-- 首页 -->
+<div id="home" class="screen active">
+  <button class="music-toggle home-theme-btn" id="homeThemeToggle" onclick="toggleTheme()" title="日间/夜间模式">☀️</button>
+  <h1>覃秋宜黄立康崖微铭林养橙四人大战</h1>
+  <div class="subtitle">民 国 冥 婚 · 阴 亲 献 祭 · 规 律 命 案</div>
+  <div class="home-box">
+    <h3>4人剧本 · 120-150分钟</h3>
+    <input type="text" id="playerName" placeholder="输入你的名字" maxlength="10">
+    <div class="btn-group" style="margin-bottom:15px">
+      <button class="btn btn-primary" onclick="createRoom()">创建房间</button>
+      <button class="btn" onclick="showJoin()">加入房间</button>
+    </div>
+    <div class="divider"><span>或</span></div>
+    <button class="btn" onclick="startSoloMode()" style="width:100%;background:linear-gradient(135deg,#2a4a2a,#1a3a1a);border-color:#3a6a3a">🎭 单人体验模式</button>
+    <div id="joinArea" class="hidden">
+      <div class="divider"><span>或</span></div>
+      <input type="text" id="roomIdInput" placeholder="输入房间号" maxlength="6">
+      <button class="btn btn-primary" onclick="joinRoom()" style="width:100%">加入</button>
+    </div>
+  </div>
+  <div style="margin-top:30px;color:#444;font-size:12px">Firebase实时数据库联机 · 跨网络稳定连接 · 手机电脑均可<br><span style="color:#888;font-size:11px;">💡 无需自建服务器 · 打开即玩 · 支持4人同时在线
+<div class="firebase-config" id="firebaseConfigPanel">
+  <h4>🔥 Firebase 配置（首次使用需填写）</h4>
+  <textarea id="firebaseConfigInput">{
+  "apiKey": "AIzaSyDrNi9SDl_VtmJun7GRBXNxBQntr3VoVTA",
+  "authDomain": "gamepart-ccefe.firebaseapp.com",
+  "databaseURL": "https://gamepart-ccefe-default-rtdb.firebaseio.com",
+  "projectId": "gamepart-ccefe",
+  "storageBucket": "gamepart-ccefe.firebasestorage.app",
+  "messagingSenderId": "89294722475",
+  "appId": "1:89294722475:web:0b01e1dddcd9436d3deeee",
+  "measurementId": "G-BH9J3XTWTD"
+}</textarea>
+  <div style="margin-top:10px;">
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:8px 20px;font-size:12px;">保存配置</button>
+    <span id="firebaseStatus" class="firebase-status"></span>
+  </div>
+  <div class="hint">
+    配置只需填写一次，会自动保存到浏览器。<br>
+    如何获取：登录 <a href="https://console.firebase.google.com" target="_blank" style="color:#e74c3c;">Firebase控制台</a> → 创建项目 → 启用Realtime Database → 项目设置→添加Web应用→复制配置JSON
+  </div>
+</div></span></div>
+</div>
+
+<!-- 等待室 -->
+<div id="lobby" class="screen">
+  <div class="lobby-header">
+    <div class="room-id">房间号：<span id="roomIdDisplay"></span></div>
+    <div><span id="lobbyPlayerName"></span> <span id="hostBadge" class="hidden" style="color:#8b0000">[主持人]</span></div>
+  </div>
+  <div class="player-list scrollbar" id="playerList"></div>
+  <div class="lobby-footer">
+    <button class="btn" onclick="toggleReady()" id="readyBtn">准备</button>
+    <button class="btn btn-primary hidden" id="startBtn" onclick="startGame()">开始游戏（需全部准备）</button>
+    <button class="btn" onclick="leaveRoom()">退出房间</button>
+    <button class="btn hidden" id="disbandBtn" onclick="disbandRoom()" style="background:#8b0000;color:#fff">解散房间</button>
+  </div>
+</div>
+
+<!-- 开场CG -->
+<div id="cg" class="screen">
+  <div class="cg-text" id="cgText"></div>
+  <div class="cg-skip" onclick="skipCG()">点击跳过 ▶</div>
+</div>
+
+<!-- 游戏主界面 -->
+<div id="game" class="screen">
+  <div class="game-header">
+    <div class="act-title" id="actTitle">第一幕</div>
+    <div class="room-info">
+      <span class="room-id-display" id="roomIdDisplayHeader">房间：------</span>
+      <button class="music-toggle" onclick="togglePlayerList()" title="玩家列表">👥</button>
+      <select id="voiceSelect" class="voice-select" onchange="changeVoice(this.value)" title="DM语音音色"></select>
+    </div>
+    <div class="player-info">
+      <span id="soloBadge" class="solo-badge hidden">单人模式</span>
+      <span>你是：</span><span class="char-name" id="myCharName">未分配</span>
+      <span class="timer" id="gameTimer"></span>
+      <button class="music-toggle" id="ttsToggle" onclick="toggleTTS()" title="DM语音朗读">🔇</button>
+      <button class="music-toggle" id="themeToggle" onclick="toggleTheme()" title="日间/夜间模式">☀️</button>
+      <button class="music-toggle" id="musicToggle" onclick="toggleBGM()" title="背景音乐">♪</button>
+      <button class="music-toggle" onclick="leaveRoom()" title="退出房间" style="font-size:14px">✕</button>
+    </div>
+    <div class="solo-char-switch hidden" id="soloCharSwitch"></div>
+  </div>
+  <!-- 玩家列表面板 -->
+  <div class="player-list-panel" id="playerListPanel">
+    <div class="player-list-header">
+      <span>玩家列表</span>
+      <button class="music-toggle" onclick="togglePlayerList()" style="font-size:14px">✕</button>
+    </div>
+    <div class="player-list-content" id="playerListContent"></div>
+  </div>
+  <div class="game-body">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main-area">
+      <div class="content-area scrollbar" id="contentArea"></div>
+      <div class="chat-area">
+        <div class="chat-header">
+          <span class="chat-title">💬 公聊区</span>
+          <span class="chat-role" id="chatRoleDisplay">身份：未分配</span>
+        </div>
+        <div class="chat-messages scrollbar" id="chatMessages"></div>
+        <div class="chat-input">
+          <input type="text" id="chatInput" placeholder="输入公聊内容..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn" onclick="sendChat()">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 线索详情弹窗 -->
+<div class="clue-detail" id="clueDetail" onclick="closeClueDetail()">
+  <div class="clue-detail-box" onclick="event.stopPropagation()">
+    <h3 id="clueDetailTitle"></h3>
+    <p id="clueDetailContent"></p>
+    <button class="btn" onclick="closeClueDetail()" style="margin-top:15px">关闭</button>
+  </div>
+</div>
+
+<!-- 私聊窗口 -->
+<div class="pm-window" id="pmWindow">
+  <div class="pm-header">
+    <span id="pmTargetName">私聊</span>
+    <span class="close" onclick="closePM()">✕</span>
+  </div>
+  <div class="pm-messages scrollbar" id="pmMessages"></div>
+  <div class="pm-input">
+    <input type="text" id="pmInput" placeholder="私聊内容..." onkeydown="if(event.key==='Enter')sendPM()">
+    <button class="btn" onclick="sendPM()">发送</button>
+  </div>
+</div>
+
+<!-- 结局 -->
+<div id="ending" class="screen">
+  <div class="ending-label">— 结局 —</div>
+  <div class="ending-title" id="endingTitle"></div>
+  <div class="ending-text" id="endingText"></div>
+  <button class="btn btn-primary ending-btn" onclick="showReview()">查看完整复盘</button>
+  <button class="btn ending-btn" onclick="backToHome()" style="margin-top:10px">返回首页</button>
+</div>
+
+<!-- 复盘 -->
+<div id="review" class="screen scrollbar">
+  <div class="review-header">
+    <h2>完 整 复 盘</h2>
+    <div style="color:#666;font-size:14px">《覃秋宜黄立康崖微铭林养橙四人大战》真相还原</div>
+  </div>
+  <div id="reviewContent"></div>
+  <div style="text-align:center;padding:20px">
+    <button class="btn" onclick="backToHome()">返回首页</button>
+  </div>
+</div>
+
+<script>
+// ==================== 剧本数据 ====================
+const SCRIPT = {
+  title: '覃秋宜黄立康崖微铭林养橙四人大战',
+  cgLines: [
+    '民国十七年，江南古镇。',
+    '覃家大宅的红灯笼，挂了整整一条街。',
+    '今天是覃家大小姐出殡的日子，也是她出嫁的日子。',
+    '红烛与白绫同悬，喜服与丧服共穿。',
+    '冥婚——将死人配成阴亲，入土为安。',
+    '可灵堂里的丫鬟林养橙，却看见棺中大小姐的指甲，缓缓长了一寸。',
+    '子时三刻，阴风骤起。',
+    '灵堂四角的四具纸人，同时睁开了眼睛。',
+    '大门轰然锁死，红烛变成了惨绿色。',
+    '阴阳先生崖微铭翻开手中的生死簿，声音沙哑：',
+    '"这不是冥婚。这是选命。"',
+    '"你们四个人里，只有一个能活着走出去。"',
+    '棺木中传来指甲刮擦木板的声音——一下，又一下。',
+    '而过去十年间，镇上每三年便有一对青年男女，以同样的方式死去。',
+    '死因皆被归为"冥婚冲喜"。',
+    '规律从未断过。',
+    '只是这一次——',
+    '死人，不想再认命了。'
+  ],
+  background: '民国十七年（1928年），江南古镇青溪镇。覃家是镇上的望族，世代经营丝绸生意，宅院深阔，已有百年历史。覃家老爷覃守元年近五十，膝下只有一女覃秋宜，爱如掌上明珠。\n\n然而覃家富贵的背后，藏着一个延续百年的恐怖秘密——覃家祖上靠"阴亲献祭"发家。每三年，覃家便要以冥婚为名，献祭一对青年男女的魂魄，将其封印在祖宅地下，以此换取家族气运不衰。仪式由覃家家主与一位阴阳先生共同主持，祭品被记录在一本名为《生死簿》的册子上，死后以"意外""暴毙"掩人耳目，再配成阴亲风光大葬。\n\n十年前，上一任阴阳先生临终前将衣钵传给了弟子崖微铭。崖微铭主持了三次献祭，手上已有六条人命。他随身携带的生死簿上，写满了历代祭品的名字。\n\n这一次，被选中的"阴人"是覃家大小姐覃秋宜——她无意中在书房发现了祖传的《阴亲录》和生死簿，得知了父亲的秘密。覃守元为了保守秘密，在女儿的安神药中下了慢性毒药"鹤顶红"，对外宣称女儿"暴毙而亡"。他决定将亲生女儿作为这一次的阴人祭品，既灭了口，又完成了仪式。\n\n被选中的"阳人"是外乡书生黄立康。他三日前路过青溪镇，因年轻、阳气足、无亲无故，被崖微铭看中。崖微铭在镇外的石桥上将其推落河中溺亡，伪装成意外落水。\n\n丫鬟林养橙是覃秋宜生前唯一信任的人。她无意中撞见覃守元在药中下药，被覃守元威胁不许声张。仪式准备中，她被强迫用混合了朱砂与黑狗血的"镇魂水"擦拭灵堂，双手留下了洗不掉的红痕——这是"仪式见证人"的标记。\n\n冥婚当夜，仪式出了偏差。覃秋宜怨念极强——她是被亲生父亲杀害的，又要被迫与一个素不相识的死人配阴亲。她的怨念冲破了封印，将四人的魂魄拉入了灵堂的"夹缝空间"：已死的覃秋宜和黄立康以为自己还活着，活着的林养橙和崖微铭则被困在灵堂中无法离开。\n\n崖微铭知道这是"困灵局"——困灵局需要一个人自愿留下作为"锚点"，其余人才能离开。但他隐瞒了另一个真相：如果四人能找到生死簿并将其焚毁，就能彻底打破覃家百年的献祭仪式，让所有被封印的魂魄解脱，四人也能全员破局。',
+  characters: [
+    {
+      id:'qin', name:'覃秋宜', gender:'女', age:22,
+      avatar:'👰',
+      desc:'覃家大小姐，冥婚新娘。已死之人，却记得自己被杀那天的每一个细节。',
+      publicInfo:'覃秋宜是覃家唯一的大小姐，年方二十二，容貌秀美，精通琴棋书画，是青溪镇有名的才女。她三日前"暴毙"于闺房之中，死因成谜，大夫只说是"急病攻心"。按照阴阳先生崖微铭的说法，她命数未尽便横死，魂魄不安，需要配一桩冥婚才能入土为安。冥婚的对象是三日前意外溺亡的外乡书生黄立康。此刻你穿着大红喜服，躺在棺木中，却在子时三刻睁开了眼睛——你记得自己是怎么死的，每一个细节都记得。',
+      secret:'你是被你亲生父亲覃守元毒死的。三日前，你在书房暗格中发现了一本泛黄的册子《阴亲录》和一本写满名字的生死簿，得知了覃家百年的恐怖秘密——每三年献祭一对青年男女的魂魄来换取家族气运。你质问父亲，他没有否认，只是沉默。当晚，你喝了他端来的安神药后腹痛如绞，他站在床边看着你，说："秋宜，你是覃家的女儿，这是你的命。"你死在了自己的闺房里。你恨他，你恨这桩冥婚，你恨自己生在覃家。但你也有一个秘密没有告诉任何人——你在死前把《阴亲录》中关键的一页撕了下来，藏在了你的发簪里。',
+      script:{
+        act1:'你在棺木中醒来。大红喜服裹着你的身体，头上盖着红盖头。你听到外面有人在说话——是丫鬟林养橙的声音，还有一个陌生男人的声音。你推开棺盖坐起来，看到灵堂里点着红白两色的蜡烛，四角站着四具纸人，纸人的眼睛似乎在动。林养橙看到你，吓得瘫坐在地。那个陌生男人自称黄立康，说他是你的冥婚丈夫，但他看起来和你一样困惑。还有一个穿道袍的男人站在灵堂中央，手里拿着一本旧册子，他说他叫崖微铭，是这场冥婚的主持者。崖微铭告诉你们：灵堂的大门已经锁死，这是"困灵局"，四个人里只有一个能活着走出去。你摸了摸头上的发簪——那页纸还在。你没有声张。',
+        act2:'搜证时，你趁其他人不注意，回到了自己的闺房。你的房间还保持着死前的样子，书桌上放着那碗还没喝完的安神药，药碗边缘有一圈暗红色的残渣。你在梳妆台的镜子里看到了自己——脸色惨白，嘴唇发紫，这是中毒的症状。你在枕头下找到了一封你没写完的信，是写给林养橙的："养橙，若我死了，不要相信老爷，不要相信崖先生，去书房暗格找那本册子——"信到这里就断了，因为你写到一半时毒性发作。你还在衣柜的夹层里发现了一件婴儿的小衣服，上面绣着一个"覃"字——你想起来了，你的母亲不是病死的，她是在生你弟弟时难产死的，而那个弟弟也没能活下来。父亲说母亲"命薄"，但现在你怀疑，母亲的死也和那个仪式有关。',
+        act3:'你在隐藏线索中看到了自己的死亡记忆——不是之前模糊的片段，而是完整的、清晰的记忆。你看到父亲在厨房亲自为你煎药，他从一个小瓷瓶中倒出了一些白色粉末放进药里。你认出那个瓷瓶——那是母亲的遗物，父亲一直说那是母亲的"首饰盒"。你还看到，在你死后，崖微铭走进你的房间，用镇魂水涂抹了你的额头和双手，嘴里念念有词。他对你的尸体说："大小姐，莫怪我，我也是奉命行事。你若乖乖做了阴亲，覃家会记得你的功劳。"你终于明白了——你不是第一个被亲生父亲献祭的孩子。在你之前，可能还有更多。你摸了摸发簪里那页纸，上面记录着打破仪式的方法："焚生死簿于灵堂烛火中，困灵局可破，历代亡魂可解。"'
+      }
+    },
+    {
+      id:'lin', name:'林养橙', gender:'女', age:19,
+      avatar:'🏮',
+      desc:'覃家贴身丫鬟，覃秋宜生前唯一信任的人。双手藏着洗不掉的红痕。',
+      publicInfo:'林养橙是覃家的家生丫鬟，从小在覃家长大，三年前被安排到大小姐覃秋宜身边伺候。她性格温顺细心，是覃秋宜生前最信任的人。大小姐暴毙后，她悲痛欲绝，主动要求为大小姐守灵。冥婚当夜，她守在灵堂，亲眼看见棺中大小姐的指甲缓缓生长，随后四具纸人睁眼，灵堂锁死。她的双手从仪式准备那天起就染上了一层洗不掉的暗红色痕迹，像是血渍，又像是朱砂。她一直戴着手套，但此刻手套不知去了哪里，红痕暴露在所有人面前。',
+      secret:'你亲眼看见老爷毒杀了大小姐。三日前的傍晚，你去厨房给大小姐端安神药，在厨房窗外看到老爷亲自在煎药，他从一个小瓷瓶里倒了些白色粉末进去。你吓得捂住了嘴，但老爷还是发现了你。他抓住你的手腕，眼神冰冷地说："养橙，你在覃家吃了十九年的饭，该说什么，不该说什么，你清楚。"他还强迫你用一种暗红色的水——后来你知道那是混了朱砂和黑狗血的镇魂水——擦拭灵堂的每一寸地面和棺木。你的双手泡在那水里整整一夜，从此留下了洗不掉的红痕。老爷说，这是"见证人"的印记，如果你敢把秘密说出去，红痕就会蔓延到全身，让你生不如死。你害怕，但你更对不起大小姐——她对你那么好，你却连她的死因都不敢说。',
+      script:{
+        act1:'你守在灵堂里，烧着纸钱。子时三刻，你亲眼看见棺中大小姐的指甲刮擦着棺盖——一下，又一下。然后棺盖被推开了，大小姐穿着喜服坐了起来，红盖头下的眼睛直直地看着你。你吓得瘫坐在地，嘴里喊着"小姐饶命"。这时灵堂大门轰然关上，四角的纸人同时睁开了眼睛。一个穿道袍的男人——崖微铭——从灵堂外走进来，不知他之前去了哪里。还有一个年轻男人从灵堂角落站起来，一脸茫然，他说他叫黄立康，是大小姐的冥婚丈夫，但他不知道自己为什么会在这里。崖微铭翻开生死簿说这是"困灵局"，四个人里只有一个能活着出去。你看了一眼大小姐——她的眼神不像是死人，倒像是充满了恨意。你想告诉她真相，但你不敢。你手上的红痕在烛光下格外刺眼。',
+        act2:'搜证时，你在自己的住处——柴房旁边的小耳房——找到了大小姐死前偷偷塞给你的一个布包。布包里是一把小钥匙和一张纸条，纸条上是大小姐的字迹："养橙，若我出事，用这把钥匙去开书房书架第三层左数第七本书后的暗格。看完后烧掉。"你一直没敢去。现在你拿着钥匙，手在发抖。你还在耳房的床板下发现了一双婴儿虎头鞋和一封发黄的信，信是你母亲写的——你母亲也是覃家的丫鬟，在你五岁时病死了。信上写着："橙儿，娘对不起你。你本不该在覃家，但娘没得选。每三年，覃家就要死两个人，你爹就是二十年前被选中的那个。娘把你生在覃家，是希望他们能放过你。但你要记住——永远不要在子时后待在灵堂。"你这才知道，你从出生起就是覃家的"预备祭品"。',
+        act3:'你在隐藏线索中回忆起了更多被恐惧封印的记忆。大小姐死前三天，你听到老爷和崖微铭在书房密谈。崖微铭说："这一次的阴人怨气太重，她是被至亲所害，恐怕仪式会出偏差。"老爷说："偏差也要做，秋宜知道了太多事，她必须死。阳人找好了吗？"崖微铭说："一个外乡书生，无亲无故，三日前已经处理了。"你还想起，仪式开始前，崖微铭在灵堂地下埋了一个陶罐，罐子里装着生辰八字和头发指甲。他说那是"镇物"，但你偷看到陶罐上刻着四个人的名字——覃秋宜、黄立康、林养橙、崖微铭。你们四个人的名字都在上面。你终于明白了——困灵局不是意外，崖微铭早就知道会这样。他把自己也刻在镇物上，是因为他有自己的算盘。'
+      }
+    },
+    {
+      id:'huang', name:'黄立康', gender:'男', age:23,
+      avatar:'📜',
+      desc:'外乡书生，冥婚新郎。三日前溺亡，却对自己的死毫无记忆。',
+      publicInfo:'黄立康是一个外乡书生，三日前路过青溪镇，在镇外的石桥上意外落水溺亡。他的尸体被打捞上来后，暂放在义庄。阴阳先生崖微铭说他与刚暴毙的覃家大小姐八字相合，是天造地设的一对阴亲，便做主将他选为冥婚新郎。冥婚当夜，他的尸体被安置在灵堂中，与覃秋宜的棺木并排。但子时三刻，他醒了过来——浑身湿透，袖口还滴着水，却对自己是怎么死的毫无记忆。他只记得自己在石桥上散步，然后背后有人推了他一把。',
+      secret:'你不是意外落水，你是被人推下河的。你隐约记得在桥上时，身后有脚步声，然后一只手按在你的背上，把你推了下去。你在水中挣扎时，看到桥上站着一个穿道袍的人影。你是个穷书生，从外地来此投亲不遇，身上没有银子，也没有人会为你报仇——这正是你被选中的原因。但你还有一个秘密：你不是普通的书生。你的真名叫黄文康，你哥哥黄文轩十年前在青溪镇失踪，官方说法是"投河自尽"。你怀疑哥哥的死另有隐情，这次是化名来青溪镇调查的。你哥哥失踪前给你写过最后一封信，信上说："青溪镇覃家有问题，每三年要死两个人，我查到了证据——"信到这里就断了。',
+      script:{
+        act1:'你在一片潮湿中醒来，发现自己躺在灵堂的地上，浑身湿透，袖口不断滴着水。你身边是一口黑色的棺木，灵堂里挂满了白绫和红绸。一个穿喜服的女子正从棺木中坐起来，直勾勾地看着你。一个丫鬟模样的女孩缩在角落发抖。还有一个穿道袍的中年男人站在灵堂中央，手里拿着一本旧册子。你问这是哪里，他们告诉你：你已经死了三天了，你是覃家大小姐的冥婚新郎。你摸了摸自己的身体——冰冷，没有心跳，但你能说话、能走路。你完全不记得自己是怎么死的，只记得在石桥上被人推了一把。道袍男人说他叫崖微铭，是他主持的冥婚。他说这是"困灵局"，四个人里只有一个能活着出去。你注意到他看你的眼神有些闪躲——他似乎知道你是怎么死的。',
+        act2:'搜证时，你在自己被放置的义庄方向——灵堂西侧的偏厅——找到了你的遗物：一个湿漉漉的书箱。书箱里有几件换洗衣物、几本书，还有你藏在夹层里的一封信。那是你哥哥黄文轩十年前写给你的最后一封信，信纸已经泛黄。信上除了你记得的那段话，还有一行小字："阴阳先生手里有一本册子，上面写满了死人的名字。"你在书箱底部还发现了一块玉佩，玉佩上刻着一个"覃"字——这不是你的东西，你不记得它是怎么出现在你的书箱里的。玉佩的背面刻着"文轩"两个字。这是你哥哥的玉佩。他十年前就进过覃家，而且把玉佩留在了这里。',
+        act3:'你在隐藏线索中找回了死亡的完整记忆。你站在石桥上赏月，身后传来脚步声。你回头，看到一个穿道袍的男人——是崖微铭。他对你说："黄公子，借一步说话。"你还没反应过来，他的手就按在了你的背上，把你推下了桥。你在水中挣扎时，看到他站在桥上，翻开手里的册子，在你的名字上画了一个圈。你还想起来了——你在水中下沉时，看到河底散落着白骨和锈蚀的首饰，不止一具。这条河，是覃家处理祭品的地方。你终于明白了：你哥哥十年前也是被崖微铭推下这条河的。你们兄弟二人，都死在了同一个人手里。而那块刻着"覃"字的玉佩，是哥哥在被推下河前，奋力扔上岸的——他在临死前留下了指认覃家的证据。'
+      }
+    },
+    {
+      id:'ya', name:'崖微铭', gender:'男', age:45,
+      avatar:'📿',
+      desc:'游走四方的阴阳先生，这场冥婚的主持者。随身携带一本写满名字的生死簿。',
+      publicInfo:'崖微铭是一位游走四方的阴阳先生，四十余岁，面容清瘦，常年穿一件洗得发白的道袍，随身携带着一本泛黄的线装册子——他称之为"生死簿"，上面记录着他主持过的所有法事和亡者的名字。他受覃老爷之托，为暴毙的覃家大小姐主持冥婚，选中了三日前溺亡的外乡书生黄立康。他精通阴阳术数，是灵堂里最冷静的人。子时三刻纸人睁眼、大门锁死后，他翻开生死簿，说这是"困灵局"，四个人里只有一个能活着走出去。但他的眼神里，似乎藏着比困灵局更深的秘密。',
+      secret:'你就是杀死黄立康的凶手。三日前，你在石桥上把他推下了河。这不是你第一次杀人——过去十年，你主持了三次冥婚献祭，亲手杀了六个年轻人。你的师父是上一任阴阳先生，他临终前把衣钵和生死簿传给你，告诉你这是"替天行道，以阴亲换阳世太平"。但你后来发现，这根本不是什么替天行道，而是覃家用活人魂魄换取家族富贵的邪术。你想过离开，但覃守元威胁你——生死簿上也有你的名字，如果你不做，你就是下一个祭品。你被迫继续。但这一次，你有自己的计划：困灵局是你故意引发的。你在镇物上刻了四个人的名字，包括你自己，因为你发现了一个禁术——如果困灵局中有人自愿成为"锚点"，主持者可以吞噬其他三人的魂魄，获得长生。你需要引导他们互相猜忌，让他们投票选出一个锚点，然后你就能完成禁术。',
+      script:{
+        act1:'冥婚仪式进行到子时三刻时，你感觉到了——覃秋宜的怨念太强，封印被冲破了。你早有准备，在仪式前就把刻有四人名字的镇物埋在了灵堂地下。困灵局形成了，大门锁死，纸人睁眼。你翻开生死簿，对另外三人说这是"困灵局"，只有一个人能活着出去。这不是谎言，但你隐瞒了关键信息——你没有说焚簿可以破局，也没有说你自己就是推黄立康下河的人。你注意到黄立康看你的眼神充满了疑惑，他似乎对你有模糊的印象。林养橙的双手红痕暴露了她"见证人"的身份，她知道得比你想象的多。而覃秋宜——她从棺木中坐起来时，你看到她的手摸了摸发簪。你不知道那里面藏着什么，但你有种不好的预感。你必须掌控局面，引导他们互相猜忌。',
+        act2:'搜证时，你回到了自己暂住的客房。你在床板下找到了师父留给你的一个木匣，里面有一封他的亲笔信。信上写着："微铭吾徒，师父骗了你。阴亲献祭不是替天行道，是邪术。我一生主持了五次献祭，手上十条人命，夜夜噩梦。生死簿最后一页记载了破局之法——焚簿于烛火，困灵可破，亡魂可解。但焚簿者需以自身阳寿为引，恐有性命之虞。师父不敢做，希望你有勇气。"你看完信后沉默了很久。你还在客房的抽屉里发现了覃守元给你的一叠银票和一封信："崖先生，事毕之后，这是你的酬劳。离开青溪镇，永远不要回来。另外，你知道的太多了——如果仪式出了任何差错，你应该知道后果。"他在威胁你。不管仪式成功与否，你都可能被灭口。',
+        act3:'你在隐藏线索中翻到了生死簿的最后一页——你之前一直不敢看。那上面用朱砂写着破局之法："焚生死簿于灵堂红烛之上，以焚簿者阳寿十年为引，可破困灵局，释放历代被封印之亡魂。若四人同心，则阳寿可由四人分担，每人折寿两载，皆可存活。"你愣住了。原来不需要有人死——如果四个人愿意共同承担，所有人都能活着离开。但你不敢说。你杀了黄立康，你杀了六个人，你是他们的仇人。如果他们知道真相，会原谅你吗？还是会把你投票选为锚点，让你永远留在灵堂里？你攥着生死簿，手在发抖。你还有另一个选择——继续隐瞒破局之法，引导他们投票选出一个锚点，然后你吞噬所有人的魂魄获得长生。这是你最初的计划。但师父的信在你口袋里发烫。'
+      }
+    }
+  ],
+  acts: [
+    {
+      id:1, title:'第一幕：冥婚',
+      intro:'子时三刻，灵堂。红烛变成了惨绿色，四具纸人同时睁眼，大门轰然锁死。覃秋宜从棺木中坐起，黄立康在地上醒来，林养橙缩在角落，崖微铭站在灵堂中央。你们四个人被困在了这座灵堂里——两个死人，两个活人。崖微铭说这是"困灵局"，四个人里只有一个能活着走出去。在找到出路之前，你们需要先弄清楚：彼此是谁？为什么是你们四个？这桩冥婚背后到底藏着什么秘密？',
+      duration:30,
+      icebreakers:[
+        '请每个人做自我介绍——你是谁？你是怎么来到这座灵堂的？',
+        '你相信这世上有鬼吗？你觉得自己现在是活着还是死了？',
+        '崖微铭说"只有一个人能活着出去"，你觉得他说的是真话吗？你怀疑谁？'
+      ]
+    },
+    {
+      id:2, title:'第二幕：搜证',
+      intro:'灵堂的门暂时打不开，但灵堂两侧的偏门却在这时吱呀一声开了——灵堂、棺木、书房、后院，四个区域可以搜索。崖微铭说，困灵局与这座宅子的秘密有关，找到线索也许就能找到出路。红烛摇曳，纸人在角落注视着你们。你们需要搜索覃家大宅，找到那些被掩埋的真相——冥婚器物、十年命案、覃家秘事。',
+      duration:40,
+      clues:[
+        {id:'c1', title:'冥婚喜服', location:'灵堂·棺木旁', desc:'两件大红喜服叠放在棺木旁，喜服上绣着龙凤呈祥的纹样。', content:'两件喜服一女一男，女式喜服内领处绣着"覃秋宜"三个字，男式喜服内领处绣着"黄立康"。但仔细看男式喜服的袖口，有一小片暗褐色的污渍——是河水的淤泥，还没有干透。喜服的口袋里各放着一张生辰八字，覃秋宜的八字被朱砂笔圈了起来，旁边写着"阴人·怨气极重"；黄立康的八字上写着"阳人·溺水横死"。两张八字的背面都盖着同一个印章——"覃氏阴亲"。'},
+        {id:'c2', title:'四具纸人', location:'灵堂·四角', desc:'灵堂四角各立着一具纸人，纸人的眼睛不知何时睁开了。', content:'四具纸人约真人大小，分别穿着红、白、青、黑四色纸衣。纸人的脸上画着僵硬的笑容，但眼睛——那些眼睛不是画上去的，而是真正的人眼，浑浊、灰白，正随着你们的移动而转动。每具纸人的胸口都写着一个名字：第一具写着"光绪三十四年·赵氏"，第二具写着"宣统三年·钱氏"，第三具写着"民国七年·孙氏"，第四具写着"民国十七年·覃氏"。四具纸人代表着四次冥婚献祭，每一次都有一位"阴人"。纸人的脚下各有一个陶碗，碗里残留着暗红色的液体。'},
+        {id:'c3', title:'棺木中的抓痕', location:'灵堂·棺木内', desc:'覃秋宜的棺木内部，盖子上有深深的指甲抓痕。', content:'棺木是上好的楠木棺，内壁铺着大红绸缎。棺盖内侧有五道深深的抓痕，从右向左延伸，划痕中还嵌着暗红色的指甲油碎屑——这是覃秋宜被封入棺中后醒来过、试图推开棺盖留下的痕迹。但奇怪的是，抓痕不止一组。在绸缎下面，还有更旧的、已经发黑的抓痕，至少有三组。这意味着，这口棺木以前装过其他"新娘"，她们也曾在棺中醒来。棺木底部有一个暗格，里面放着一缕头发和一块碎玉，碎玉上刻着"赵"字。'},
+        {id:'c4', title:'灵堂牌位', location:'灵堂·供桌', desc:'供桌上除了覃秋宜和黄立康的牌位，还有一排更小的牌位。', content:'供桌正中央是两个崭新的牌位："覃氏秋宜之灵位"和"黄氏立康之灵位"。但在它们后面，还藏着一排八个小牌位，每个牌位上都写着一对名字："赵若兰·周文远""钱素芬·吴德昌""孙玉娥·郑天和"……以及最新的一个，只写了"黄文轩"，旁边的位置空着，没有写女方的名字。这些就是过去十年间三次冥婚献祭的死者——加上黄文轩，一共七个名字。八个牌位，七对半。黄文轩的牌位前插着三炷已经燃尽的香，香灰还是温的。'},
+        {id:'c5', title:'书房暗格', location:'书房·书架', desc:'书房书架第三层，第七本书后面似乎有一个暗格。', content:'移开第七本书后，露出一个暗格。暗格里有一本泛黄的线装册子，封面上写着《阴亲录》三个字。册中详细记载了覃家百年的冥婚献祭仪式："每三年一祭，取阴年阴月阴日生之女子为阴人，阳年阳月阳日生之男子为阳人，非自然死亡且心怀怨念者为佳。以镇魂水封其魂魄，配成阴亲，葬于宅下，可保家族三年气运。"册子最后几页被撕掉了——撕痕很新。暗格里还有一本账册，记录着覃家每三年献祭后丝绸生意的"异常兴隆"，日期与献祭时间完全吻合。'},
+        {id:'c6', title:'小瓷瓶', location:'书房·书桌抽屉', desc:'抽屉里有一个精致的小瓷瓶，瓶中残留着白色粉末。', content:'瓷瓶是青花瓷，瓶底有"覃府"二字。瓶中残留的白色粉末经辨认是鹤顶红——砒霜的一种，微量即可致命。瓶身上刻着一行小字："内宅所用，外人勿动。"抽屉里还有一张药方，上面写着"大小姐安神方"，药方的最后多了一行小字，笔迹与药方不同："加鹤顶红三分，七日见效。"这行字的笔迹，与覃守元在账册上的签名笔迹一致。'},
+        {id:'c7', title:'后院老井', location:'后院·井台', desc:'后院有一口封死的老井，井盖贴着泛黄的符纸。', content:'井盖上贴着七张符纸，每张符纸上写着一个名字——与灵堂牌位上的七个名字完全一致。掀开井盖，井底没有水，只有密密麻麻的白骨和锈蚀的首饰——发簪、耳环、玉佩、铜扣。白骨至少有十几具，有些已经年代久远。井壁上刻着字，是不同的人刻下的："放我出去""我不想死""崖微铭骗了我们"……最新的一行刻痕很新，刻着"黄文轩 民国七年"。井底还有一块没有腐烂的木牌，上面写着："覃家阴亲献祭处·光绪二十年立。"'},
+        {id:'c8', title:'崖微铭的客房', location:'后院·客房', desc:'阴阳先生暂住的客房，桌上散落着符箓和法器。', content:'桌上摆着铜钱剑、铃铛、符箓等法器，还有一本翻旧了的《道法会元》。床底下有一个木箱，里面装着六个人的生辰八字和头发指甲——分别是过去三次献祭的六名死者。箱子最底层有一封崖微铭师父的亲笔信，信中写道："阴亲献祭是邪术，非替天行道。生死簿最后一页有破局之法。"但信的最后一句话被墨涂掉了，只能隐约辨认出"焚簿者……"几个字。桌上还有一张覃守元写的字条："崖先生，事毕之后，离开青溪镇，永远不要回来。"'},
+        {id:'c9', title:'镇魂水与红痕', location:'灵堂·偏厅', desc:'偏厅的地上放着一个铜盆，盆中残留着暗红色液体。', content:'铜盆里的液体暗红色，散发着朱砂和铁锈混合的气味。盆边搭着一块抹布，抹布上沾满了同样的暗红色。液体是镇魂水——朱砂混合黑狗血，用来擦拭灵堂和棺木，封印死者的魂魄。铜盆旁边有一双女人的手套，手套内侧也沾满了暗红色。地上还有一串湿漉漉的脚印，从灵堂大门延伸到偏厅，脚印是赤脚的，尺码很小——像是有人从河里走上来，一路走进了灵堂。'},
+        {id:'c10', title:'覃家族谱', location:'书房·暗柜', desc:'一本厚厚的覃家族谱，记载着覃家百年的历史。', content:'族谱显示，覃家从光绪二十年（1894年）开始"气运兴隆"，此前覃家只是普通农户。族谱中每隔三年就有一对年轻族人或外人"意外身亡"的记录，死因多为"投河""暴毙""急病"。族谱最后一页夹着一张照片——是十年前的覃家全家福，照片中有一个年轻男人站在角落，穿着道袍，面容与崖微铭有七分相似，但更年轻。照片背面写着："师徒合影·民国元年。"族谱中还有一条被划掉的记录："民国七年，丫鬟林氏所生一子，夭折。"——林氏，就是林养橙的母亲。'}
+      ]
+    },
+    {
+      id:3, title:'第三幕：纸人',
+      intro:'搜索到的线索让灵堂中的气氛更加诡异。覃家百年的献祭秘密浮出水面，而你们四个人，都与这场阴谋有着千丝万缕的联系。纸人在角落发出沙沙的声响，像是在低语。有些话，不能在公开场合说；有些真相，需要私下交换。崖微铭的表情越来越难看——他似乎知道得比他说出来的多得多。',
+      duration:40,
+      hiddenClues:[
+        {id:'h1', title:'覃秋宜的完整记忆', target:'qin', content:'你闭上眼睛，死亡的记忆如潮水般涌来。你看到父亲在厨房煎药，白色粉末落入药中。你看到自己喝下药后腹痛如绞，父亲站在床边说"这是你的命"。你看到崖微铭在你死后用镇魂水涂抹你的额头。你还看到了一个被遗忘的细节——你死前撕走的那页《阴亲录》上，除了破局之法，还记载着一个秘密："困灵局中，若死者怨念足够强大，可以反噬主持者。"你摸了摸发簪里的那页纸，它微微发烫。你意识到，你不仅能破局，还能让崖微铭和覃守元付出代价。但反噬的后果是什么，纸上没有写——也许你会魂飞魄散，也许你会变成更可怕的东西。'},
+        {id:'h2', title:'林养橙的身世', target:'lin', content:'你把母亲留下的信反复读了三遍，终于拼凑出了真相。你的父亲是二十年前被选中的"阳人"祭品，被推下河溺亡。你的母亲当时已经怀了你，覃家没有杀她，而是让她以丫鬟的身份生下你——因为你是"祭品的后代"，天生带有"阴亲血脉"，是未来仪式的备用祭品。你从小在覃家长大，不是恩典，是圈养。你母亲五年前"病死"，其实是因为她试图带你逃走，被覃守元发现后毒杀的。你还想起了一件事——大小姐死前一天，偷偷对你说："养橙，如果我不在了，你就逃。能逃多远逃多远。"当时你不明白，现在你明白了。大小姐一直在保护你。'},
+        {id:'h3', title:'黄立康的河底记忆', target:'huang', content:'你触碰了书箱里那块玉佩，死亡的记忆彻底复苏。你记起了崖微铭推你下河的全过程，也记起了在河底看到的景象——白骨、首饰、还有一张卡在石缝里的纸条。纸条是你哥哥黄文轩的字迹："我查到了覃家的秘密，阴阳先生叫崖微铭，他有一本生死簿。如果我死了，让我弟弟来报仇。"你哥哥不是被推下河后立即死亡的——他在河底挣扎了很久，用最后一口气把纸条和玉佩塞进了石缝。你还想起了一个细节：你在水中下沉时，看到崖微铭在桥上翻开册子，他的手在发抖，嘴里念叨着"对不起"。他不是冷血无情的人——他在杀人时也在痛苦。这也许是可以利用的弱点。'},
+        {id:'h4', title:'崖微铭的抉择', target:'ya', content:'你反复读着师父的信和生死簿最后一页。破局之法是真实的：焚簿于红烛，四人同心分担阳寿，每人折寿两载，皆可存活。但你不敢说——你杀了黄立康和他哥哥，你杀了六个人，你是他们的仇人。你还有另一个发现：生死簿的最后一页还写着禁术——"若有人自愿为锚，主持者可吞噬其余三魂，得长生。"这就是你最初的计划。但现在你犹豫了。师父的信、那些纸人的眼睛、井底的白骨……你受够了。你想起了师父临终前的话："微铭，别像我一样，一辈子不敢做对的事。"你攥着生死簿，做了一个决定——你要把真相说出来，让他们选择。哪怕他们选择让你死，你也认了。但在此之前，你需要确认：他们会给你这个机会吗？'},
+        {id:'h5', title:'覃秋宜与林养橙的羁绊', target:'qin', content:'你在棺木的暗格里找到了一封你写给林养橙但没来得及寄出的信——不，你不记得写过这封信。信上是你的字迹："养橙，当你读到这封信时，我可能已经不在了。我查到了父亲的秘密，我知道他会对我下手。我不怕死，我怕的是你也会成为祭品。我在你的茶里放过几次安神药，让你睡得沉一些，这样你就不会看到那些可怕的事情。原谅我一直没有告诉你真相，我只是想保护你。如果有机会，离开覃家，好好活着。"信的最后还有一行小字，是另一种笔迹——林养橙的笔迹："小姐，我看到了。我来陪你。"你不知道她是什么时候写的，但你的眼眶湿润了。在这座吃人的宅子里，你们是彼此唯一的光。'},
+        {id:'h6', title:'黄立康与崖微铭的对峙', target:'huang', content:'你在偏厅的角落里找到了一根湿漉漉的道袍腰带——和崖微铭身上穿的那件道袍材质完全相同。腰带上沾着河泥和一片水草。这是他推你下河时沾到的证据。你还发现了一个细节：崖微铭的道袍内侧绣着"黄"字——不，不是黄，是"崖"字被拆掉后留下的针脚，原来的字是"文"。你突然想起了哥哥信中提过的一句话："那个阴阳先生身边有个小徒弟，和我年纪相仿，好像姓文。"崖微铭不姓崖——他姓文。他可能是你哥哥当年认识的人。这层关系，也许是解开一切的关键。'},
+        {id:'h7', title:'林养橙的红痕秘密', target:'lin', content:'你双手的红痕在灵堂的绿光中开始发烫，你听到了一个声音——不是耳朵听到的，是直接在脑海中响起的。那是历代"见证人"的声音："我们都是被迫的……我们的手洗不干净……但你可以……红痕是印记，也是钥匙……把红痕按在生死簿上，我们就能出来……"你低头看着双手，红痕在发光。你终于明白了红痕的真正含义——它不仅是"见证人"的标记，更是开启困灵局封印的钥匙。你的手泡过镇魂水，能触碰生死簿而不被反噬。如果你配合焚簿，破局的把握会更大。但那些声音也在哭泣："别让我们白死……让覃家还债……"'}
+      ],
+      pmPairs:[
+        ['qin','lin','覃秋宜和林养橙情同姐妹，她们之间有未说出口的保护与愧疚'],
+        ['huang','ya','黄立康记起崖微铭是杀兄仇人，但崖微铭似乎另有隐情'],
+        ['qin','huang','两个"死人"同病相怜，覃秋宜的发簪和黄立康的玉佩可能是破局关键'],
+        ['lin','huang','林养橙的父亲是二十年前的祭品，黄立康的哥哥是十年前的祭品，他们的命运被同一双手改变'],
+        ['ya','lin','崖微铭知道林养橙是"祭品后代"，他对她怀有愧疚'],
+        ['qin','ya','覃秋宜恨崖微铭助纣为虐，但他手中的生死簿是破局的关键'],
+        ['lin','huang','林养橙的红痕是开启封印的钥匙，黄立康的证据能指认凶手']
+      ]
+    },
+    {
+      id:4, title:'第四幕：选命',
+      intro:'红烛燃到了尽头，灵堂开始震动，纸人们纷纷站起，朝你们走来。崖微铭终于说出了全部真相——困灵局有两条路：投票选出一人留下作为锚点，其余人离开；或者四人同心，焚毁生死簿，共同承担阳寿折损，全员破局。但焚簿者需要以阳寿为引，而且——你们愿意和杀死自己亲人的凶手一起破局吗？投票即将开始，这是最后的选择。',
+      duration:40,
+      finalQuestion:'谁该为这场百年阴谋付出代价？你们会选择投票牺牲一人独活，还是选择信任彼此、焚簿破局？覃秋宜的发簪、林养橙的红痕、黄立康的玉佩、崖微铭的生死簿——四样东西齐聚灵堂，命运就在你们手中。',
+      voteQuestion:'你认为，谁应该留在灵堂作为"锚点"？'
+    }
+  ],
+  endings:{
+    truth:{
+      title:'破局结局：焚簿',
+      text:'林养橙将双手按在生死簿上，红痕发出刺目的红光。\n\n历代"见证人"的声音在灵堂中回响，那些被封印了百年的魂魄终于找到了出口。\n\n"我来焚簿。"崖微铭走上前，从林养橙手中接过生死簿。他的手在发抖，但眼神前所未有地坚定。\n\n"黄立康，"他说，"我杀了你和你哥哥，我欠你们两条命。焚簿折寿两载太便宜我了——我自愿多折阳寿三十年，替历代祭品还债。"\n\n他不等众人回答，将生死簿投入了红烛之中。\n\n火焰腾起，不是普通的红色，而是惨白的光。生死簿在火中翻页，每一页上的名字都在燃烧、在尖叫、在消散。灵堂剧烈震动，四具纸人同时燃烧，灰烬中飘出无数光点——那是被封印了百年的魂魄，终于获得了自由。\n\n崖微铭的头发以肉眼可见的速度变白，他的脸上爬满了皱纹，但他在笑。\n\n"师父，"他低声说，"弟子终于做对了一件事。"\n\n天亮时，灵堂的大门自己开了。\n\n阳光照进来，覃秋宜的身体在光芒中变得透明。她看着林养橙，微笑着说："养橙，好好活着。"\n\n黄立康站在她身边，两个"死人"的身影在晨光中渐渐消散。他们的魂魄自由了。\n\n林养橙走出了覃家大宅，手里攥着覃秋宜留给她的信。她把覃家百年的阴谋告到了县衙，官府在老井中挖出了十七具白骨。覃守元在逃跑时疯了，他不停地喊着"别来找我"，最后跳进了那口老井。\n\n崖微铭没有死。他白发苍苍，像一个七十岁的老人，但他活着。他把师父的信和《阴亲录》残页交给了官府，然后在青溪镇的河边搭了一间草棚，为那些被他害死的人守灵。\n\n三年后，林养橙离开了青溪镇。她用覃秋宜留给她的银子读了书，后来在上海做了一名小学教员。她每年清明都会回青溪镇，在老井边烧一沓纸钱——不是给覃家，是给那些没能逃出来的人。\n\n她的双手上，红痕已经淡了。\n\n但她永远不会忘记。'
+    },
+    curse:{
+      title:'独活结局：锚点',
+      text:'你们选择了投票。\n\n四票，三票投给了崖微铭。\n\n他苦笑了一声，没有辩解。"是我罪有应得。"他翻开生死簿，念出了锚点的咒语。\n\n灵堂的大门开了一条缝，绿色的光从门外照进来。\n\n"走，"崖微铭说，"趁我还撑得住。"\n\n林养橙第一个冲了出去，黄立康跟在后面。覃秋宜回头看了崖微铭一眼，他站在灵堂中央，生死簿在他手中自动翻页，纸人们围在他身边，像是在迎接新的主人。\n\n"你会变成新的守门人。"覃秋宜说。\n\n"我知道。"崖微铭说，"这是我的惩罚。"\n\n大门在他们身后关上了。\n\n林养橙和黄立康逃出了覃家大宅，但他们很快发现——他们什么都改变不了。\n\n覃秋宜消散在了晨光中，她的怨念没有被化解，魂魄永远困在了灵堂里。\n\n黄立康在三天后再次"死去"——他的尸体在义庄中被发现，和三日前一模一样，仿佛那场冥婚从未被打破。\n\n林养橙疯了。她不停地洗手，洗了三天三夜，双手的红痕不但没有消退，反而蔓延到了全身。她在一个雨夜跳进了老井。\n\n崖微铭成为了新的"守门人"。他站在灵堂中央，手里拿着生死簿，纸人围绕着他。他的意识在被历代祭品的怨念吞噬，他能感觉到自己正在变成另一个人——不，另一个东西。\n\n三年后，覃家又要举行冥婚了。\n\n新的阴阳先生站在灵堂里，翻开生死簿，在空白的一页上写下了两个新的名字。\n\n他的字迹，和崖微铭一模一样。\n\n——规律从未断过。\n\n这一次，也不会例外。'
+    },
+    redeem:{
+      title:'同归结局：反噬',
+      text:'覃秋宜突然从发簪中抽出那页残纸，按在了自己的额头上。\n\n"不要——"林养橙尖叫。\n\n但覃秋宜已经开始了反噬。她的怨念化作黑色的火焰，从她体内喷涌而出，吞噬着灵堂中的一切。纸人在黑火中尖叫碎裂，红烛全部熄灭，灵堂的地面裂开了缝隙。\n\n"既然覃家要我死，"覃秋宜的声音不再像人，更像是千万个亡魂在同时说话，"那我就拉着整个覃家一起。"\n\n崖微铭大喊："这样你会魂飞魄散的！"\n\n"我已经死了。"覃秋宜看着他，黑色的泪从她眼中流下，"我不怕再死一次。"\n\n黄立康走上前，把玉佩放在了覃秋宜手中。"我哥哥在河底等了十年。他说，不要让我们白死。"\n\n林养橙哭着把双手按在地上，红痕的光与黑火交织在一起。"小姐，我陪你。"\n\n崖微铭沉默了片刻，然后将生死簿扔进了黑火之中。"我杀了太多人。这一次，让我做点对的事。"\n\n四个人的力量汇聚在一起——死者的怨念、活人的忏悔、祭品的血脉、主持者的禁术。\n\n灵堂崩塌了。\n\n不是物理上的崩塌，而是整个"困灵局"的崩塌。百年的封印在这一刻碎裂，老井中的白骨化为飞灰，覃家大宅在晨光中轰然倒塌。\n\n覃守元在睡梦中被倒塌的房梁砸死，至死都不知道发生了什么。\n\n阳光照在废墟上。\n\n林养橙是唯一的幸存者。她站在废墟前，身上落满了灰尘，双手的红痕彻底消失了。\n\n崖微铭在崩塌前把师父的信和《阴亲录》残页塞到了她手里，对她说："告诉世人真相。"\n\n黄立康在消散前对她笑了笑："我哥哥可以安息了。"\n\n覃秋宜最后消失，她摸了摸林养橙的头，像以前那样："养橙，别哭。我们都自由了。"\n\n林养橙把真相公之于众。青溪镇的人在老井中挖出了十七具白骨，覃家百年的阴谋震惊了整个江南。\n\n她在废墟上种了一棵桂花树。每年秋天，满树金黄，香气飘出很远。\n\n有人说，月圆之夜，能听到桂花树下有女子的笑声和读书声。\n\n那是覃秋宜和黄立康，终于可以安宁了。'
+    }
+  },
+  review:{
+    truth:'《覃秋宜黄立康崖微铭林养橙四人大战》的核心是"阴亲献祭"与"命运反噬"。\n\n覃家百年富贵建立在一个恐怖的秘密之上：从光绪二十年（1894年）开始，覃家每三年以冥婚为名，献祭一对青年男女的魂魄，封印在祖宅地下，换取家族气运。仪式由覃家家主与一位阴阳先生共同主持，祭品被记录在生死簿上，死后以"意外""暴毙"掩人耳目。\n\n本案的四个角色都与这场阴谋有着深刻的羁绊：\n\n覃秋宜是覃家大小姐，她发现了父亲的秘密后被亲生父亲毒杀，作为"阴人"祭品。她怨念极强，是困灵局形成的直接原因。\n\n黄立康是外乡书生，真名黄文康，他的哥哥黄文轩十年前被崖微铭推下河献祭。他化名来青溪镇调查，却同样被崖微铭推下河，作为"阳人"祭品。\n\n林养橙是覃家丫鬟，她的父亲是二十年前的祭品，母亲是覃家丫鬟，她从出生起就是"备用祭品"。她目睹了覃秋宜被毒杀，被强迫用镇魂水擦拭灵堂，双手留下红痕。\n\n崖微铭是阴阳先生，过去十年主持了三次献祭，亲手杀了六人（包括黄立康兄弟）。他本是被迫的——覃守元用生死簿上他的名字威胁他。他最初计划利用困灵局吞噬三魂获得长生，但最终选择了焚簿破局，以自身阳寿赎罪。\n\n困灵局有两条出路：一是投票选出一人作为锚点，其余人离开，但这只会延续诅咒；二是四人同心焚毁生死簿，每人折寿两载，全员破局。如果覃秋宜选择反噬，则会与困灵局同归于尽，只有林养橙幸存。\n\n幕后黑手覃守元在三个结局中都没有好下场：破局结局中他投井自尽，独活结局中他继续作恶但最终疯癫，同归结局中他被房梁砸死。',
+    characters:{
+      qin:'覃秋宜：22岁，覃家大小姐，才貌双全。她是本案的"阴人"祭品，被亲生父亲毒杀。她怨念极强，是困灵局形成的关键。她的发簪中藏着《阴亲录》的残页，记录着破局和反噬两种方法。她的角色弧光是从被害者到掌控自己命运的人——她可以选择怨恨和毁灭，也可以选择原谅和解脱。',
+      lin:'林养橙：19岁，覃家丫鬟，家生奴才。她的父亲是二十年前的祭品，她从出生起就是"备用祭品"。她目睹了覃秋宜被毒杀却不敢声张，双手的红痕是"见证人"的标记，也是开启封印的钥匙。她是连接所有角色的纽带——与覃秋宜情同姐妹，与黄立康同为受害者后代，与崖微铭有愧疚与被愧疚的关系。她的角色弧光是从恐惧沉默到勇敢站出。',
+      huang:'黄立康：23岁，外乡书生，真名黄文康。他的哥哥十年前被崖微铭推下河献祭，他化名来调查，也被推下河。他是"阳人"祭品。他携带的玉佩是哥哥留下的证据，指向覃家。他的角色弧光是从复仇到宽恕——他发现崖微铭也是被迫的，最终选择共同破局。',
+      ya:'崖微铭：45岁，阴阳先生，姓文。他被师父收养，继承了阴阳先生的衣钵，十年间被迫主持三次献祭，亲手杀了六人。他最初计划利用困灵局吞噬三魂获得长生，但师父的遗信让他良心发现。他是最复杂的角色——既是凶手，也是受害者；既想长生，又想赎罪。他的角色弧光是从助纣为虐到自我牺牲。'
+    },
+    timeline:'1894年（光绪二十年）：覃家开始阴亲献祭，第一对祭品被封入老井。\n1908年（光绪三十四年）：赵氏与周文远成为祭品，第一具纸人。\n1911年（宣统三年）：钱氏与吴德昌成为祭品，第二具纸人。\n1918年（民国七年）：崖微铭的师父主持最后一次献祭，孙玉娥与郑天和成为祭品。同年，黄立康的哥哥黄文轩查到覃家秘密，被崖微铭推下河，但未配成阴亲（牌位旁女方名字空缺）。林养橙的母亲（丫鬟林氏）当时已怀孕。\n1919年（民国八年）：林养橙出生，被覃家作为"备用祭品"圈养。\n1923年（民国十二年）：林养橙母亲试图带女儿逃走，被覃守元毒杀，对外称"病死"。\n1928年（民国十七年）：覃秋宜发现《阴亲录》和生死簿，被覃守元毒杀。三日前，崖微铭将黄立康推下河。冥婚当夜，困灵局形成，故事开始。'
+  }
+};
+
+
+
+// ==================== Firebase 联机核心 ====================
+let fbInitialized=false;
+
+function initFirebase(){
+  if(fbInitialized){
+    if(!gameState.fbDb && gameState.fbApp){gameState.fbDb=gameState.fbApp.database();}
+    return true;
+  }
+  // 优先从localStorage读取
+  let configStr=localStorage.getItem('human_firebase_config');
+  // 如果没有，尝试从textarea读取
+  if(!configStr||configStr==='undefined'){
+    const input=document.getElementById('firebaseConfigInput');
+    if(input&&input.value.trim()){
+      configStr=input.value.trim();
+      localStorage.setItem('human_firebase_config',configStr);
+    }
+  }
+  if(!configStr){notify('请先填写Firebase配置');return false;}
+  try{
+    const config=JSON.parse(configStr);
+    if(!config.apiKey||!config.databaseURL){throw new Error('配置缺少apiKey或databaseURL');}
+    gameState.fbApp=firebase.initializeApp(config);
+    gameState.fbDb=firebase.database();
+    fbInitialized=true;
+    const status=document.getElementById('firebaseStatus');
+    if(status){status.className='firebase-status ok';status.textContent='✓ 已连接';}
+    return true;
+  }catch(e){
+    notify('Firebase配置错误：'+e.message);
+    const status=document.getElementById('firebaseStatus');
+    if(status){status.className='firebase-status err';status.textContent='✗ '+e.message;}
+    return false;
+  }
+}
+
+function saveFirebaseConfig(){
+  const input=document.getElementById('firebaseConfigInput');
+  const status=document.getElementById('firebaseStatus');
+  try{
+    const config=JSON.parse(input.value.trim());
+    if(!config.apiKey||!config.databaseURL){throw new Error('缺少apiKey或databaseURL');}
+    localStorage.setItem('human_firebase_config',JSON.stringify(config));
+    status.className='firebase-status ok';
+    status.textContent='✓ 配置已保存';
+    notify('Firebase配置保存成功');
+    // 尝试初始化
+    if(!fbInitialized){initFirebase();}
+  }catch(e){
+    status.className='firebase-status err';
+    status.textContent='✗ '+e.message;
+  }
+}
+
+function generateRoomId(){
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
+
+function fbCreateRoom(){
+  const roomId=generateRoomId();
+  gameState.roomId=roomId;
+  const roomRef=gameState.fbDb.ref('rooms/'+roomId);
+  gameState.fbRoomRef=roomRef;
+  
+  const roomData={
+    roomId:roomId,
+    hostName:gameState.myName,
+    createdAt:Date.now(),
+    phase:'lobby',
+    currentAct:1,
+    players:{
+      host:{name:gameState.myName,charId:null,ready:true,isHost:true}
+    },
+    state:{},
+    messages:{}
+  };
+  
+  roomRef.set(roomData).then(()=>{
+    document.getElementById('roomIdDisplay').textContent=roomId;
+    document.getElementById('lobbyPlayerName').textContent=gameState.myName;
+    document.getElementById('hostBadge').classList.remove('hidden');
+    localStorage.setItem('human_host_'+roomId,'1');
+    showScreen('lobby');
+    notify('房间创建成功！房间号：'+roomId);
+    fbListenRoom();
+  }).catch(err=>{
+    notify('创建房间失败：'+err.message);
+  });
+  
+  // 设置房间自动清理（2小时后删除）
+  setTimeout(()=>{try{roomRef.remove();}catch(e){}},7200000);
+}
+
+function fbJoinRoom(){
+  const roomId=document.getElementById('roomIdInput').value.trim().toUpperCase();
+  const roomRef=gameState.fbDb.ref('rooms/'+roomId);
+  gameState.fbRoomRef=roomRef;
+  gameState.roomId=roomId;
+  
+  roomRef.once('value').then(snapshot=>{
+    if(!snapshot.exists()){
+      notify('房间不存在或已关闭');
+      return;
+    }
+    const room=snapshot.val();
+    // 检查房间是否待删除
+    if(room.pendingDelete && room.pendingDelete<Date.now()){
+      notify('房间已过期，请重新创建');
+      try{roomRef.remove();}catch(e){}
+      return;
+    }
+    // 重连机制：检查localStorage是否有之前的playerId
+    const savedId=localStorage.getItem('human_player_'+roomId);
+    let playerId;
+    // 检查是否是原房主重连
+    const wasHost=localStorage.getItem('human_host_'+roomId)==='1';
+    if(wasHost && room.hostLeft){
+      // 原房主重连：恢复房主身份，取消待删除
+      gameState.isHost=true;
+      gameState.myPlayerId='host';
+      // 恢复游戏进度
+      if(room.state){
+        if(room.state.currentAct!==undefined)gameState.currentAct=room.state.currentAct;
+        if(room.state.phase)gameState.phase=room.state.phase;
+        if(room.state.gameStartTime)gameState.gameStartTime=room.state.gameStartTime;
+        if(room.state.unlockedClues)gameState.unlockedClues=room.state.unlockedClues;
+        if(room.state.votes)gameState.votes=room.state.votes;
+      }
+      if(room.players && room.players.host && room.players.host.charId){
+        gameState.myCharId=room.players.host.charId;
+      }
+      roomRef.child('pendingDelete').remove();
+      roomRef.child('hostLeft').remove();
+      roomRef.child('hostName').set(gameState.myName);
+      roomRef.child('players/host').update({name:gameState.myName,ready:true});
+      localStorage.setItem('human_host_'+roomId,'1');
+      notify('房主重连成功，已恢复房主身份和进度');
+    }else if(savedId && room.players && room.players[savedId]){
+      // 重连：复用之前的ID，恢复角色和游戏进度
+      playerId=savedId;
+      gameState.myPlayerId=playerId;
+      const savedPlayer=room.players[savedId];
+      if(savedPlayer.charId){
+        gameState.myCharId=savedPlayer.charId;
+      }
+      // 恢复游戏进度
+      if(room.state){
+        if(room.state.currentAct!==undefined)gameState.currentAct=room.state.currentAct;
+        if(room.state.phase)gameState.phase=room.state.phase;
+        if(room.state.gameStartTime)gameState.gameStartTime=room.state.gameStartTime;
+        if(room.state.unlockedClues)gameState.unlockedClues=room.state.unlockedClues;
+        if(room.state.votes)gameState.votes=room.state.votes;
+      }
+      // 更新在线状态
+      roomRef.child('players/'+playerId).update({name:gameState.myName,ready:false});
+      notify('重连成功，已恢复角色和进度');
+    }else{
+      // 先按昵称查找已有玩家（支持换ID/清缓存后重连）
+      let foundId=null;
+      if(room.players){
+        for(const pid in room.players){
+          if(pid==='host')continue;
+          if(room.players[pid].name===gameState.myName){
+            foundId=pid;break;
+          }
+        }
+      }
+      if(foundId){
+        // 同名玩家存在，自动接管身份和角色
+        playerId=foundId;
+        gameState.myPlayerId=playerId;
+        localStorage.setItem('human_player_'+roomId,playerId);
+        const savedPlayer=room.players[foundId];
+        if(savedPlayer.charId){
+          gameState.myCharId=savedPlayer.charId;
+        }
+        // 恢复游戏进度
+        if(room.state){
+          if(room.state.currentAct!==undefined)gameState.currentAct=room.state.currentAct;
+          if(room.state.phase)gameState.phase=room.state.phase;
+          if(room.state.gameStartTime)gameState.gameStartTime=room.state.gameStartTime;
+          if(room.state.unlockedClues)gameState.unlockedClues=room.state.unlockedClues;
+          if(room.state.votes)gameState.votes=room.state.votes;
+        }
+        roomRef.child('players/'+playerId).update({name:gameState.myName,ready:false});
+        notify('昵称匹配成功，已恢复身份和角色');
+      }else{
+        // 新玩家
+        playerId='p_'+Date.now();
+        gameState.myPlayerId=playerId;
+        localStorage.setItem('human_player_'+roomId,playerId);
+        roomRef.child('players/'+playerId).set({
+          name:gameState.myName,
+          charId:null,
+          ready:false,
+          isHost:false
+        });
+        notify('已加入房间 '+roomId);
+      }
+    }
+    
+    document.getElementById('roomIdDisplay').textContent=roomId;
+    document.getElementById('lobbyPlayerName').textContent=gameState.myName;
+    document.getElementById('hostBadge').classList.add('hidden');
+    fbListenRoom();
+    // 重连后如果游戏已开始，直接进入对应界面
+    if(gameState.phase==='game' && gameState.myCharId){
+      startGameUI();
+    }else if(gameState.phase==='ending'){
+      if(room.state && room.state.ending)showEnding(room.state.ending);
+      else showScreen('ending');
+    }else if(gameState.phase==='review'){
+      showReview();
+    }else{
+      showScreen('lobby');
+    }
+  }).catch(err=>{
+    notify('加入房间失败：'+err.message);
+  });
+}
+
+function fbListenRoom(){
+  if(!gameState.fbRoomRef)return;
+  
+  // 监听玩家变化
+  const playersSub=gameState.fbRoomRef.child('players').on('value',snapshot=>{
+    const playersObj=snapshot.val()||{};
+    gameState.players=Object.entries(playersObj).map(([id,p])=>({
+      id:id,
+      name:p.name,
+      charId:p.charId,
+      ready:p.ready,
+      isHost:p.isHost
+    }));
+    // 客户端更新自己的角色
+    if(!gameState.isHost && gameState.myPlayerId){
+      const me=gameState.players.find(p=>p.id===gameState.myPlayerId);
+      if(me && me.charId){
+        gameState.myCharId=me.charId;
+        const char=SCRIPT.characters.find(c=>c.id===me.charId);
+        if(char){
+          const nameEl=document.getElementById('myCharName');
+          if(nameEl)nameEl.textContent=char.name;
+          const crdEl=document.getElementById('chatRoleDisplay');
+          if(crdEl)crdEl.innerHTML='身份：<span class="role-avatar">'+char.avatar+'</span>'+char.name;
+        }
+        if(typeof renderGame==='function')renderGame();
+      }
+    }
+    updateLobby();
+  });
+  gameState.fbUnsubscribes.push(()=>gameState.fbRoomRef.child('players').off('value',playersSub));
+  
+  // 监听游戏状态
+  const stateSub=gameState.fbRoomRef.child('state').on('value',snapshot=>{
+    const state=snapshot.val();
+    if(state&&!gameState.isHost){
+      // 客户端同步房主状态
+      const oldAct=gameState.currentAct;
+      if(state.phase){gameState.phase=state.phase;}
+      if(state.currentAct!==undefined){gameState.currentAct=state.currentAct;}
+      if(state.gameStartTime){gameState.gameStartTime=state.gameStartTime;}
+      if(state.unlockedClues){
+        const oldClueCount=gameState.unlockedClues.length;
+        gameState.unlockedClues=state.unlockedClues;
+        if(gameState.unlockedClues.length!==oldClueCount && gameState.phase==='game'){
+          if(typeof renderSidebar==='function')renderSidebar();
+          if(typeof renderContent==='function')renderContent();
+        }
+      }
+      if(state.votes){gameState.votes=state.votes;}
+      if((gameState.currentAct!==oldAct) && gameState.phase==='game'){
+        if(typeof renderGame==='function')renderGame();
+      }
+      if(state.phase==='cg'){
+        showScreen('cg');
+        gameState.cgIndex=0;
+        if(typeof showCGLine==='function')showCGLine();
+      }
+      else if(state.phase==='game'){
+        showScreen('game');
+        if(typeof startGameUI==='function')startGameUI();
+      }
+      else if(state.phase==='ending'){
+        gameState.phase='ending';
+        if(state.ending)showEnding(state.ending);
+        else showScreen('ending');
+      }
+      else if(state.phase==='review'){gameState.phase='review';showReview();}
+    }
+  });
+  gameState.fbUnsubscribes.push(()=>gameState.fbRoomRef.child('state').off('value',stateSub));
+  
+  // 监听消息
+  const msgRef=gameState.fbRoomRef.child('messages');
+  const msgSub=msgRef.on('child_added',snapshot=>{
+    const msg=snapshot.val();
+    if(msg&&msg.to&&(msg.to==='all'||msg.to===gameState.myPlayerId||(gameState.isHost&&msg.to==='host'))){
+      handleNetworkMessage(msg);
+    }
+    // 清理旧消息
+    if(Date.now()-msg.timestamp>60000){snapshot.ref.remove();}
+  });
+  gameState.fbUnsubscribes.push(()=>msgRef.off('child_added',msgSub));
+}
+
+function fbBroadcastState(){
+  if(!gameState.isHost||!gameState.fbRoomRef)return;
+  gameState.fbRoomRef.child('state').set({
+    phase:gameState.phase,
+    currentAct:gameState.currentAct,
+    gameStartTime:gameState.gameStartTime,
+    unlockedClues:gameState.unlockedClues,
+    timestamp:Date.now()
+  });
+}
+
+// 处理Firebase网络消息
+function handleNetworkMessage(msg){
+  if(!msg || !msg.type)return;
+  const data=msg.data||msg;
+  switch(msg.type){
+    case 'chat':
+      // 过滤自己发的消息，避免重复显示
+      const myId=gameState.isHost?'host':gameState.myPlayerId;
+      if(msg.from!==myId && data.name && data.message){
+        addChat(data.name,data.message,false);
+      }
+      break;
+    case 'system':
+      if(data.message)addChat('系统',data.message,true);
+      break;
+    case 'pm':
+      // 私聊消息
+      const fromName=data.fromName||'未知';
+      const fromId=data.from||'unknown';
+      if(!gameState.pmHistory[fromId])gameState.pmHistory[fromId]=[];
+      gameState.pmHistory[fromId].push({from:fromName,message:data.message});
+      if(gameState.currentPM===fromId){
+        if(typeof renderPM==='function')renderPM();
+        else if(typeof renderContent==='function')renderContent();
+      }else{
+        notify('收到来自 '+fromName+' 的私聊');
+      }
+      break;
+    case 'voteUpdate':
+      if(data.votes)gameState.votes=data.votes;
+      if(typeof checkVoteComplete==='function')checkVoteComplete();
+      if(typeof renderContent==='function')renderContent();
+      break;
+    case 'state':
+      if(data.phase==='ending'){
+        gameState.phase='ending';
+        if(data.ending)showEnding(data.ending);
+        else showScreen('ending');
+      }else if(data.phase==='review'){
+        gameState.phase='review';
+        showReview();
+      }
+      if(data.currentAct!==undefined)gameState.currentAct=data.currentAct;
+      break;
+  }
+  // 房主需要处理的消息
+  if(gameState.isHost){
+    switch(msg.type){
+      case 'vote':
+        if(data.voter && data.target!==undefined){
+          gameState.votes[data.voter]=data.target;
+          if(gameState.fbRoomRef)fbSendMessage('voteUpdate',{votes:gameState.votes},'all');
+          if(typeof checkVoteComplete==='function')checkVoteComplete();
+        }
+        break;
+      case 'clueUnlock':
+        if(data.clueId && !gameState.unlockedClues.includes(data.clueId)){
+          gameState.unlockedClues.push(data.clueId);
+          broadcastState();
+          const clue=SCRIPT.acts[1].clues.find(c=>c.id===data.clueId);
+          if(clue){
+            addChat('系统',`发现了新线索：${clue.title}`,true);
+            broadcast({type:'system',message:`发现了新线索：${clue.title}`});
+            dmClueHint(data.clueId);
+          }
+          if(typeof renderGame==='function')renderGame();
+        }
+        break;
+    }
+  }
+}
+
+function fbSendMessage(type,data,to){
+  if(!gameState.fbRoomRef)return;
+  const msgRef=gameState.fbRoomRef.child('messages').push();
+  msgRef.set({
+    type:type,
+    data:data,
+    from:gameState.isHost?'host':gameState.myPlayerId,
+    to:to||'all',
+    timestamp:Date.now()
+  });
+}
+
+function fbCleanup(){
+  gameState.fbUnsubscribes.forEach(fn=>{try{fn();}catch(e){}});
+  gameState.fbUnsubscribes=[];
+  if(gameState.isHost&&gameState.fbRoomRef&&!gameState.disbanded){
+    // 房主退出：设置3分钟后自动删除，期间可重连恢复
+    try{
+      gameState.fbRoomRef.child('pendingDelete').set(Date.now()+180000);
+      gameState.fbRoomRef.child('hostLeft').set(true);
+    }catch(e){}
+  }
+  gameState.fbRoomRef=null;
+}
+
+// 解散房间（立即删除，二次确认）
+function disbandRoom(){
+  if(!gameState.isHost){notify('只有房主能解散房间');return;}
+  if(!confirm('确定要解散房间吗？所有玩家将被移出，此操作不可恢复。'))return;
+  gameState.disbanded=true;
+  if(gameState.fbRoomRef){
+    try{gameState.fbRoomRef.remove();}catch(e){}
+  }
+  backToHome();
+  notify('房间已解散');
+}
+
+// 退出房间
+function leaveRoom(){
+  if(!confirm('确定要退出房间吗？退出后3分钟内可重连恢复身份。'))return;
+  if(gameState.isHost){
+    // 房主退出：设置3分钟后自动删除，期间可重连恢复
+    notify('房主已退出，房间将保留3分钟，期间可重连恢复');
+  }else{
+    // 非房主：保留玩家数据以便重连，只标记离线
+    notify('已退出房间，3分钟内可重连恢复身份');
+  }
+  backToHome();
+}
+
+// ==================== 微信浏览器检测 ====================
+function isWechat(){
+  return /MicroMessenger/i.test(navigator.userAgent);
+}
+if(isWechat()){
+  document.addEventListener('DOMContentLoaded',()=>{
+  // 加载已保存的Firebase配置
+  const savedConfig=localStorage.getItem('human_firebase_config');
+  if(savedConfig){
+    const input=document.getElementById('firebaseConfigInput');
+    if(input){input.value=savedConfig;}
+  }
+  // 自动尝试初始化（如果textarea里有配置）
+  setTimeout(()=>{
+    try{
+      const input=document.getElementById('firebaseConfigInput');
+      if(input&&input.value.trim()){
+        const config=JSON.parse(input.value.trim());
+        if(config.apiKey&&config.databaseURL){
+          localStorage.setItem('human_firebase_config',JSON.stringify(config));
+          initFirebase();
+          const status=document.getElementById('firebaseStatus');
+          if(status){status.className='firebase-status ok';status.textContent='✓ 已自动配置';}
+        }
+      }
+    }catch(e){}
+  },500);
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    overlay.innerHTML='<div style="color:#e74c3c;font-size:24px;margin-bottom:20px;">⚠️ 不支持微信内置浏览器</div><div style="color:#ccc;font-size:16px;line-height:1.8;text-align:center;max-width:400px;">本游戏使用Firebase实时数据库联机，微信内置浏览器存在兼容性限制。<br><br>请点击右上角「···」→「在浏览器中打开」，使用系统自带浏览器（如Safari、Chrome）访问。<br><br>💡 联机建议：优先使用电脑作为房主创建房间，手机加入；手机-手机直接联机可能不稳定。</div>';
+    document.body.appendChild(overlay);
+  });
+}
+
+// ==================== 游戏状态 ====================
+let gameState = {
+  phase:'home', // home, lobby, cg, game, ending, review
+  isHost:false,
+  peer:null,
+  connections:{},
+  // Firebase
+  fbApp:null,
+  fbDb:null,
+  fbRoomRef:null,
+  fbUnsubscribes:[],
+  roomId:'',
+  myName:'',
+  myCharId:null,
+  players:[], // {id, name, charId, ready}
+  currentAct:0,
+  actStartTime:0,
+  unlockedClues:[],
+  hiddenCluesShown:[],
+  chatHistory:[],
+  pmHistory:{},
+  currentPM:null,
+  votes:{},
+  gameStartTime:0,
+  cgIndex:0
+};
+
+// ==================== 网络模块 ====================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function notify(msg){
+  const n=document.createElement('div');
+  n.className='notification';
+  n.textContent=msg;
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(),3000);
+}
+
+function createRoom(){
+  const name=document.getElementById('playerName').value.trim();
+  if(!name){notify('请输入名字');return;}
+  if(!initFirebase()){return;}
+  gameState.myName=name;
+  gameState.isHost=true;
+  gameState.myPlayerId='host';
+  notify('正在创建房间，请稍候...');
+  fbCreateRoom();
+}
+
+function showJoin(){
+  document.getElementById('joinArea').classList.toggle('hidden');
+}
+
+function joinRoom(){
+  const name=document.getElementById('playerName').value.trim();
+  const roomId=document.getElementById('roomIdInput').value.trim();
+  if(!name){notify('请输入名字');return;}
+  if(!roomId){notify('请输入房间号');return;}
+  if(!initFirebase()){return;}
+  gameState.myName=name;
+  gameState.isHost=false;
+  notify('正在连接房间 '+roomId+'，请稍候...');
+  fbJoinRoom();
+}
+
+function handleHostData(data){
+  switch(data.type){
+    case 'state':
+      gameState.players=data.players;
+      gameState.currentAct=data.currentAct;
+      gameState.unlockedClues=data.unlockedClues||[];
+      gameState.myCharId=data.myCharId;
+      gameState.votes=data.votes||{};
+      if(data.phase!==gameState.phase){
+        gameState.phase=data.phase;
+        if(data.phase==='cg')startCG();
+        if(data.phase==='game')startGameUI();
+        if(data.phase==='ending')showEnding(data.ending);
+      }
+      updateLobby();
+      if(gameState.phase==='game')renderGame();
+      break;
+    case 'chat':
+      addChat(data.name,data.message,false);
+      break;
+    case 'pm':
+      if(!gameState.pmHistory[data.from])gameState.pmHistory[data.from]=[];
+      gameState.pmHistory[data.from].push({from:data.fromName,message:data.message});
+      if(gameState.currentPM===data.from)renderPM();
+      else notify('收到来自 '+data.fromName+' 的私聊');
+      break;
+    case 'voteUpdate':
+      gameState.votes=data.votes;
+      if(gameState.currentAct===3)renderVote();
+      break;
+    case 'system':
+      addChat('系统',data.message,true);
+      break;
+  }
+}
+
+function broadcast(msg){
+  if(gameState.fbRoomRef){
+    fbSendMessage(msg.type, msg.data || msg, 'all');
+  }
+}
+
+function broadcastState(){
+  if(!gameState.isHost)return;
+  if(gameState.fbRoomRef){
+    fbBroadcastState();
+  }
+}
+
+function toggleReady(){
+  if(gameState.isHost){
+    const p=gameState.players.find(x=>x.id==='host');
+    p.ready=!p.ready;
+    if(gameState.fbRoomRef){
+      gameState.fbRoomRef.child('players/host/ready').set(p.ready);
+    }
+    broadcastState();
+    updateLobby();
+  }else{
+    if(gameState.fbRoomRef){
+      const myId=gameState.myPlayerId;
+      const me=gameState.players.find(p=>p.id===myId);
+      if(me){
+        me.ready=!me.ready;
+        gameState.fbRoomRef.child('players/'+myId+'/ready').set(me.ready);
+        updateLobby();
+      }
+    }
+  }
+}
+
+function updateLobby(){
+  const list=document.getElementById('playerList');
+  list.innerHTML=gameState.players.map(p=>`
+    <div class="player-card ${p.ready?'ready':''}">
+      <div class="avatar">${p.name.charAt(0)}</div>
+      <div class="name">${p.name}</div>
+      <div class="status">${p.ready?'已准备':'等待中'}</div>
+    </div>
+  `).join('');
+  if(gameState.isHost){
+    const allReady=gameState.players.length>=4&&gameState.players.every(p=>p.ready);
+    document.getElementById('startBtn').classList.toggle('hidden',!allReady);
+    document.getElementById('readyBtn').textContent=gameState.players.find(p=>p.id==='host')?.ready?'取消准备':'准备';
+    const disbandBtn=document.getElementById('disbandBtn');
+    if(disbandBtn)disbandBtn.classList.remove('hidden');
+  }
+}
+
+// ==================== 背景音乐（Web Audio生成） ====================
+let audioCtx=null;
+let bgmPlaying=false;
+let bgmNodes={};
+let bgmInterval=null;
+
+function initAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  }
+}
+
+function startBGM(){
+  initAudio();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  if(bgmPlaying)return;
+  bgmPlaying=true;
+  document.getElementById('musicToggle').classList.add('playing');
+  document.getElementById('musicToggle').textContent='♪';
+
+  // 主增益
+  const masterGain=audioCtx.createGain();
+  masterGain.gain.value=0.15;
+  masterGain.connect(audioCtx.destination);
+  bgmNodes.master=masterGain;
+
+  // 低频drone（中式五声音阶低音）
+  const drone1=audioCtx.createOscillator();
+  drone1.type='sine';
+  drone1.frequency.value=55; // A1
+  const droneGain1=audioCtx.createGain();
+  droneGain1.gain.value=0.3;
+  drone1.connect(droneGain1).connect(masterGain);
+  drone1.start();
+  bgmNodes.drone1=drone1;
+
+  const drone2=audioCtx.createOscillator();
+  drone2.type='sine';
+  drone2.frequency.value=82.5; // E2 纯五度
+  const droneGain2=audioCtx.createGain();
+  droneGain2.gain.value=0.2;
+  drone2.connect(droneGain2).connect(masterGain);
+  drone2.start();
+  bgmNodes.drone2=drone2;
+
+  // 缓慢调制drone
+  const lfo=audioCtx.createOscillator();
+  lfo.frequency.value=0.1;
+  const lfoGain=audioCtx.createGain();
+  lfoGain.gain.value=5;
+  lfo.connect(lfoGain).connect(drone1.frequency);
+  lfo.start();
+  bgmNodes.lfo=lfo;
+
+  // 环境风声（滤波白噪音）
+  const bufferSize=2*audioCtx.sampleRate;
+  const noiseBuffer=audioCtx.createBuffer(1,bufferSize,audioCtx.sampleRate);
+  const output=noiseBuffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++)output[i]=Math.random()*2-1;
+  const noise=audioCtx.createBufferSource();
+  noise.buffer=noiseBuffer;
+  noise.loop=true;
+  const noiseFilter=audioCtx.createBiquadFilter();
+  noiseFilter.type='lowpass';
+  noiseFilter.frequency.value=400;
+  const noiseGain=audioCtx.createGain();
+  noiseGain.gain.value=0.08;
+  noise.connect(noiseFilter).connect(noiseGain).connect(masterGain);
+  noise.start();
+  bgmNodes.noise=noise;
+
+  // 偶发诡异音符（五声音阶：宫商角徵羽）
+  const pentatonic=[220,246.94,293.66,329.63,392]; // A3 B3 D4 E4 G4
+  const playNote=()=>{
+    if(!bgmPlaying)return;
+    const freq=pentatonic[Math.floor(Math.random()*pentatonic.length)];
+    const osc=audioCtx.createOscillator();
+    osc.type='triangle';
+    osc.frequency.value=freq;
+    const gain=audioCtx.createGain();
+    gain.gain.setValueAtTime(0,audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12,audioCtx.currentTime+0.5);
+    gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+3);
+    osc.connect(gain).connect(masterGain);
+    osc.start();
+    osc.stop(audioCtx.currentTime+3);
+    // 偶尔加一个不和谐音
+    if(Math.random()<0.3){
+      setTimeout(()=>{
+        if(!bgmPlaying)return;
+        const osc2=audioCtx.createOscillator();
+        osc2.type='sine';
+        osc2.frequency.value=freq*1.414; // 三全音，不和谐
+        const gain2=audioCtx.createGain();
+        gain2.gain.setValueAtTime(0,audioCtx.currentTime);
+        gain2.gain.linearRampToValueAtTime(0.06,audioCtx.currentTime+0.3);
+        gain2.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+2);
+        osc2.connect(gain2).connect(masterGain);
+        osc2.start();
+        osc2.stop(audioCtx.currentTime+2);
+      },800);
+    }
+  };
+  // 每8-15秒触发一个音符
+  const scheduleNote=()=>{
+    if(!bgmPlaying)return;
+    playNote();
+    bgmInterval=setTimeout(scheduleNote,8000+Math.random()*7000);
+  };
+  setTimeout(scheduleNote,3000);
+}
+
+function stopBGM(){
+  bgmPlaying=false;
+  document.getElementById('musicToggle').classList.remove('playing');
+  document.getElementById('musicToggle').textContent='♪̸';
+  if(bgmInterval)clearTimeout(bgmInterval);
+  Object.values(bgmNodes).forEach(node=>{
+    try{node.stop();}catch(e){}
+    try{node.disconnect();}catch(e){}
+  });
+  bgmNodes={};
+}
+
+function toggleBGM(){
+  if(bgmPlaying)stopBGM();
+  else startBGM();
+}
+
+// 根据幕次调整音乐氛围
+function updateBGMMood(actIndex){
+  if(!bgmPlaying||!bgmNodes.drone1)return;
+  const moods=[
+    {drone1:55,drone2:82.5,noise:0.08,master:0.15},   // 第一幕：平静
+    {drone1:49,drone2:73.42,noise:0.1,master:0.18},   // 第二幕：紧张
+    {drone1:43.65,drone2:65.41,noise:0.12,master:0.2}, // 第三幕：诡异
+    {drone1:38.89,drone2:58.27,noise:0.15,master:0.22}  // 第四幕：高潮
+  ];
+  const mood=moods[actIndex]||moods[0];
+  bgmNodes.drone1.frequency.setTargetAtTime(mood.drone1,audioCtx.currentTime,1);
+  bgmNodes.drone2.frequency.setTargetAtTime(mood.drone2,audioCtx.currentTime,1);
+  if(bgmNodes.noise){
+    // noise gain是通过noiseGain连接的，需要找到它
+  }
+  if(bgmNodes.master){
+    bgmNodes.master.gain.setTargetAtTime(mood.master,audioCtx.currentTime,1);
+  }
+}
+
+// ==================== 单人体验模式 ====================
+let soloMode=false;
+let soloViewCharId=null;
+
+function startSoloMode(){
+  const name=document.getElementById('playerName').value.trim()||'体验者';
+  gameState.myName=name;
+  gameState.isHost=true;
+  soloMode=true;
+  // 创建6个玩家（1个真人+5个AI）
+  const aiNames=['AI·覃秋宜','AI·黄立康','AI·林养橙'];
+  gameState.players=[{id:'solo',name,charId:null,ready:true}];
+  aiNames.forEach((n,i)=>{
+    gameState.players.push({id:'ai'+i,name:n,charId:null,ready:true});
+  });
+  // 自动分配角色
+  const charIds=SCRIPT.characters.map(c=>c.id);
+  shuffle(charIds);
+  gameState.players.forEach((p,i)=>{
+    p.charId=charIds[i%charIds.length];
+    // AI玩家名字根据分配的角色动态生成
+    if(p.id!=='solo'){
+      const c=SCRIPT.characters.find(x=>x.id===p.charId);
+      if(c)p.name='AI·'+c.name;
+    }
+  });
+  gameState.myCharId=gameState.players[0].charId;
+  soloViewCharId=gameState.myCharId;
+  // 显示角色切换器
+  document.getElementById('soloBadge').classList.remove('hidden');
+  const sw=document.getElementById('soloCharSwitch');
+  sw.classList.remove('hidden');
+  sw.innerHTML=SCRIPT.characters.map(c=>
+    `<button class="solo-char-btn ${c.id===soloViewCharId?'active':''}" onclick="switchSoloChar('${c.id}')">${c.name}</button>`
+  ).join('');
+  gameState.phase='cg';
+  gameState.gameStartTime=Date.now();
+  startCG();
+}
+
+function switchSoloChar(charId){
+  soloViewCharId=charId;
+  document.querySelectorAll('.solo-char-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent===SCRIPT.characters.find(c=>c.id===charId).name);
+  });
+  const sc=SCRIPT.characters.find(c=>c.id===charId);
+  document.getElementById('myCharName').textContent=sc.name;
+  const crd=document.getElementById('chatRoleDisplay');
+  if(crd)crd.innerHTML='身份：<span class="role-avatar">'+sc.avatar+'</span>'+sc.name;
+  renderGame();
+}
+
+// ==================== 游戏流程 ====================
+function startGame(){
+  if(!gameState.isHost)return;
+  // 自动分配角色
+  const charIds=SCRIPT.characters.map(c=>c.id);
+  shuffle(charIds);
+  gameState.players.forEach((p,i)=>{p.charId=charIds[i%charIds.length];p.ready=false;});
+  // 更新房主自己的角色ID
+  const hostPlayer=gameState.players.find(p=>p.id==='host'||p.isHost);
+  if(hostPlayer)gameState.myCharId=hostPlayer.charId;
+  gameState.phase='cg';
+  gameState.gameStartTime=Date.now();
+  // Firebase模式：同步players（含角色分配）到数据库
+  if(gameState.fbRoomRef){
+    const playersUpdate={};
+    gameState.players.forEach(p=>{
+      playersUpdate[p.id]={name:p.name,charId:p.charId,ready:p.ready,isHost:p.isHost};
+    });
+    gameState.fbRoomRef.child('players').set(playersUpdate);
+  }
+  broadcastState();
+  startCG();
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+
+function startCG(){
+  showScreen('cg');
+  gameState.cgIndex=0;
+  showCGLine();
+}
+
+function showCGLine(){
+  const text=document.getElementById('cgText');
+  if(gameState.cgIndex>=SCRIPT.cgLines.length){
+    if(gameState.isHost){
+      gameState.phase='game';
+      gameState.currentAct=0;
+      gameState.actStartTime=Date.now();
+      broadcastState();
+      startGameUI();
+    }
+    return;
+  }
+  text.textContent=SCRIPT.cgLines[gameState.cgIndex];
+  text.classList.add('show');
+  setTimeout(()=>{
+    text.classList.remove('show');
+    setTimeout(()=>{
+      gameState.cgIndex++;
+      showCGLine();
+    },500);
+  },2500);
+}
+
+function skipCG(){
+  if(gameState.isHost){
+    gameState.cgIndex=SCRIPT.cgLines.length;
+    showCGLine();
+  }
+}
+
+function startGameUI(){
+  showScreen('game');
+  const viewCharId=soloMode?soloViewCharId:gameState.myCharId;
+  const char=SCRIPT.characters.find(c=>c.id===viewCharId);
+  document.getElementById('myCharName').textContent=char?char.name:'未分配';
+  const crd2=document.getElementById('chatRoleDisplay');
+  if(crd2)crd2.innerHTML=char?'身份：<span class="role-avatar">'+char.avatar+'</span>'+char.name:'身份：未分配';
+  const ridh=document.getElementById('roomIdDisplayHeader');
+  if(ridh)ridh.textContent='房间：'+(gameState.roomId||'------');
+  renderGame();
+  startTimer();
+  // 自动开启背景音乐
+  setTimeout(()=>{if(!bgmPlaying)startBGM();},500);
+  // DM开场发言（仅主持人）
+  if(gameState.isHost){
+    setTimeout(()=>{
+      dmActIntro(0);
+      dmStartGuide(0);
+    },800);
+  }
+  // 单机模式：启动AI公屏互动
+  if(soloMode){
+    setTimeout(()=>aiChatStart(),3000);
+  }
+}
+
+function startTimer(){
+  setInterval(()=>{
+    if(gameState.phase!=='game')return;
+    const elapsed=Math.floor((Date.now()-gameState.gameStartTime)/60000);
+    document.getElementById('gameTimer').textContent=`${elapsed}分钟`;
+  },30000);
+}
+
+function renderGame(){
+  const act=SCRIPT.acts[gameState.currentAct];
+  if(!act)return;
+  document.getElementById('actTitle').textContent=act.title;
+  renderSidebar();
+  renderContent();
+}
+
+function renderSidebar(){
+  const act=SCRIPT.acts[gameState.currentAct];
+  const sidebar=document.getElementById('sidebar');
+  let tabs='';
+  tabs+=`<div class="sidebar-tab active" data-tab="script" onclick="switchTab('script')">📜 我的剧本</div>`;
+  tabs+=`<div class="sidebar-tab" data-tab="review" onclick="switchTab('review')">📖 剧情回顾</div>`;
+  tabs+=`<div class="sidebar-tab" data-tab="diary" onclick="switchTab('diary')">📔 我的日记</div>`;
+  tabs+=`<div class="sidebar-tab" data-tab="sticky" onclick="switchTab('sticky')">📝 灵堂黄符</div>`;
+  if(gameState.currentAct>=1){
+    const clueCount=SCRIPT.acts[1].clues.length;
+    const unlocked=gameState.unlockedClues.length;
+    tabs+=`<div class="sidebar-tab" data-tab="clues" onclick="switchTab('clues')">🔍 公共线索 <span class="badge">${unlocked}/${clueCount}</span></div>`;
+  }
+  if(gameState.currentAct>=2){
+    tabs+=`<div class="sidebar-tab" data-tab="pm" onclick="switchTab('pm')">💬 私聊 <span class="badge">${Object.keys(gameState.pmHistory).length}</span></div>`;
+    tabs+=`<div class="sidebar-tab" data-tab="hidden" onclick="switchTab('hidden')">🔮 隐藏线索</div>`;
+  }
+  if(gameState.currentAct>=3){
+    tabs+=`<div class="sidebar-tab" data-tab="vote" onclick="switchTab('vote')">🗳️ 最终投票</div>`;
+  }
+  if(gameState.isHost){
+    tabs+=`<div class="sidebar-tab" onclick="nextAct()">⏭️ 推进剧情</div>`;
+  }
+  sidebar.innerHTML=tabs;
+  // 恢复当前选中的tab高亮
+  if(currentTab!=='script'){
+    const cur=sidebar.querySelector('[data-tab="'+currentTab+'"]');
+    if(cur){
+      sidebar.querySelectorAll('.sidebar-tab').forEach(t=>t.classList.remove('active'));
+      cur.classList.add('active');
+    }
+  }
+}
+
+let currentTab='script';
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.sidebar-tab').forEach(t=>{
+    t.classList.toggle('active',t.getAttribute('data-tab')===tab);
+  });
+  renderContent();
+}
+
+function renderContent(){
+  const area=document.getElementById('contentArea');
+  const act=SCRIPT.acts[gameState.currentAct];
+  const viewCharId=soloMode?soloViewCharId:gameState.myCharId;
+  const char=SCRIPT.characters.find(c=>c.id===viewCharId);
+  switch(currentTab){
+    case 'script':
+      area.innerHTML=renderScript(char,act);
+      break;
+    case 'review':
+      area.innerHTML=renderActReview();
+      break;
+    case 'clues':
+      area.innerHTML=renderClues();
+      break;
+    case 'pm':
+      area.innerHTML=renderPMList();
+      break;
+    case 'hidden':
+      area.innerHTML=renderHiddenClues(char);
+      break;
+    case 'vote':
+      area.innerHTML=renderVote();
+      break;
+    case 'diary':
+      area.innerHTML=renderDiary(char,act);
+      break;
+    case 'sticky':
+      area.innerHTML=renderStickyNotes();
+      break;
+  }
+}
+
+function renderStickyNotes(){
+  const notes=[
+    {char:'覃秋宜',color:'#f5e6d3',text:'父亲近来总在书房待到深夜，案上放着一本我从未见过的旧册子。他看到我时，眼神躲躲闪闪。——秋宜'},
+    {char:'林养橙',color:'#d3e6f5',text:'小姐让我转告厨房，今晚的安神药她自己煎。老爷听了脸色很不好看。我总觉得要出什么事。——养橙'},
+    {char:'黄立康',color:'#e6d3f5',text:'青溪镇的覃家大宅有些古怪。我哥哥十年前来过这里，之后就失踪了。我在石桥上捡到一块刻着"覃"字的玉佩。——文康'},
+    {char:'崖微铭',color:'#f5d3d3',text:'师父临终前说："微铭，别像我一样，一辈子不敢做对的事。"我在覃家等了十年，等一个了断的机会。——微铭'},
+    {char:'覃守元',color:'#d3f5d3',text:'崖先生，吉时已选定本月十五子时三刻。阴人阳人均已备妥，此事若成，覃家再保三年气运。——守元'},
+    {char:'???',color:'#1a1a1a',textColor:'#e8e8e8',text:'每三年一对。\n你们以为这是冥婚？\n这是屠宰。\n——井下'}
+  ];
+  let html='<h3 style="color:#a08060;margin-bottom:15px">📝 灵堂黄符（压在供桌下的字条）</h3>';
+  html+='<p style="color:#888;margin-bottom:20px;font-size:13px;">这些是压在灵堂供桌下的字条，有的是黄符，有的是便签。最后一张的字迹，渗着水渍。</p>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:15px;">';
+  notes.forEach(n=>{
+    html+=`<div style="background:${n.color};color:${n.textColor||'#333'};padding:15px;border-radius:4px;width:200px;min-height:120px;box-shadow:2px 2px 8px rgba(0,0,0,0.3);transform:rotate(${(Math.random()*4-2).toFixed(1)}deg);font-size:13px;line-height:1.6;"><strong style="display:block;margin-bottom:8px;color:${n.textColor?'#aaa':'#555'};">${n.char}</strong>${n.text.replace(/\n/g,'<br>')}</div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderDiary(char,act){
+  if(!char)return '<div style="text-align:center;color:#666;padding:40px">等待分配角色...</div>';
+  let html='<div class="script-content">';
+  html+=`<h3>📔 ${char.name}的私人日记</h3>`;
+  html+='<p style="color:#888;margin-bottom:20px;font-size:13px;">这是你的私人秘密笔记，其他人看不到。里面记录着你不能言说的过去。</p>';
+  html+='<div style="background:#1a1a1a;border-left:3px solid #8b0000;padding:15px;margin-bottom:20px;border-radius:0 4px 4px 0;">';
+  html+='<h4 style="color:#a08060;margin-bottom:10px">📖 日记封面</h4>';
+  html+=`<p style="color:#ccc;line-height:1.8;"><strong>姓名：</strong>${char.name}</p>`;
+  html+=`<p style="color:#ccc;line-height:1.8;"><strong>身份：</strong>${char.desc}</p>`;
+  html+=`<p style="color:#ccc;line-height:1.8;"><strong>所在：</strong>覃家灵堂</p>`;
+  html+='</div>';
+  html+='<div style="background:#1a1a1a;border-left:3px solid #8b0000;padding:15px;margin-bottom:20px;border-radius:0 4px 4px 0;">';
+  html+='<h4 style="color:#a08060;margin-bottom:10px">🔒 日记秘密（仅你可见）</h4>';
+  html+=`<p style="color:#ccc;line-height:1.8;">${char.secret}</p>`;
+  html+='</div>';
+  html+='<div style="background:#1a1a1a;border-left:3px solid #8b0000;padding:15px;margin-bottom:20px;border-radius:0 4px 4px 0;">';
+  html+=`<h4 style="color:#a08060;margin-bottom:10px">📝 第${act.id}幕日记</h4>`;
+  html+=`<p style="color:#ccc;line-height:1.8;">${char.script['act'+act.id]}</p>`;
+  html+='</div>';
+  html+='<div style="background:#1a1a1a;border-left:3px solid #8b0000;padding:15px;border-radius:0 4px 4px 0;">';
+  html+='<h4 style="color:#a08060;margin-bottom:10px">📌 日记约定</h4>';
+  html+='<p style="color:#888;line-height:1.8;font-size:13px;">你们四人被困在覃家灵堂。每个人都有自己的秘密。有些事，不适合让其他人知道。</p>';
+  html+='</div>';
+  html+='</div>';
+  return html;
+}
+
+function renderActReview(){
+  const curAct=gameState.currentAct;
+  let html='<div class="script-content">';
+  html+='<h3>📖 剧情回顾</h3>';
+  html+='<p style="color:#888;margin-bottom:20px;font-size:13px;">这里记录着你们在覃家灵堂经历的一切。点击可展开查看各幕详情。</p>';
+  for(let i=0;i<=curAct && i<SCRIPT.acts.length;i++){
+    const a=SCRIPT.acts[i];
+    const isCurrent=(i===curAct);
+    const unlocked=a.clues?gameState.unlockedClues.filter(id=>a.clues.some(c=>c.id===id)).length:0;
+    const total=a.clues?a.clues.length:0;
+    html+=`<div style="background:rgba(20,10,10,0.8);border:1px solid ${isCurrent?'#8b0000':'#3a2020'};border-radius:8px;margin-bottom:15px;overflow:hidden;">`;
+    html+=`<div style="padding:12px 18px;background:${isCurrent?'rgba(139,0,0,0.15)':'rgba(30,15,15,0.6)'};border-bottom:1px solid #3a2020;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">`;
+    html+=`<span style="color:${isCurrent?'#d4a060':'#a08060'};font-weight:bold;font-size:15px;">${isCurrent?'📍 ':''}${a.title}</span>`;
+    html+=`<span style="color:#666;font-size:12px;">${isCurrent?'【当前】':'点击展开/收起'}</span>`;
+    html+=`</div>`;
+    html+=`<div style="padding:15px 18px;display:${isCurrent?'block':'none'};">`;
+    html+=`<p style="color:#bbb;line-height:1.8;margin-bottom:12px;">${a.intro}</p>`;
+    if(a.icebreakers && a.icebreakers.length){
+      html+=`<h4 style="color:#a08060;margin:12px 0 8px;font-size:13px;">📋 破冰话题</h4><ol style="padding-left:20px;line-height:1.9;color:#999;font-size:13px;">`;
+      a.icebreakers.forEach(q=>html+=`<li>${q}</li>`);
+      html+=`</ol>`;
+    }
+    if(a.clues && a.clues.length){
+      html+=`<p style="color:#888;font-size:12px;margin-top:10px;">🔍 线索：已发现 ${unlocked}/${total} 条</p>`;
+    }
+    if(a.hiddenClues && a.hiddenClues.length){
+      html+=`<p style="color:#888;font-size:12px;margin-top:6px;">🔮 本幕隐藏线索：${a.hiddenClues.length} 条（仅自己可见）</p>`;
+    }
+    if(a.finalQuestion){
+      html+=`<div style="margin-top:12px;padding:10px 15px;background:rgba(139,0,0,0.1);border-left:3px solid #8b0000;border-radius:0 4px 4px 0;"><p style="color:#d4a060;font-size:13px;margin:0;"><strong>核心问题：</strong>${a.finalQuestion}</p></div>`;
+    }
+    html+=`</div></div>`;
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderScript(char,act){
+  if(!char)return '<div style="text-align:center;color:#666;padding:40px">等待分配角色...</div>';
+  let html=`<div class="script-content">
+    <h3>${char.name}（${char.gender}，${char.age}岁）</h3>
+    <p style="color:#888;margin-bottom:15px">${char.desc}</p>
+    <p style="margin-bottom:15px"><strong style="color:#a08060">公开信息：</strong>${char.publicInfo}</p>
+    <div class="secret">
+      <div class="secret-label">⚠️ 你的秘密（请勿让他人看到）</div>
+      ${char.secret}
+    </div>`;
+  if(act.id===1){
+    html+=`<h4 style="color:#a08060;margin:20px 0 10px">${act.title}</h4><p>${act.intro}</p>`;
+    html+=`<p style="margin-top:15px"><strong style="color:#d4a060">你的剧本：</strong>${char.script.act1}</p>`;
+    html+=`<h4 style="color:#a08060;margin:20px 0 10px">破冰任务</h4><ol style="padding-left:20px;line-height:2">`;
+    act.icebreakers.forEach(q=>html+=`<li>${q}</li>`);
+    html+=`</ol>`;
+  }else if(act.id===2){
+    html+=`<h4 style="color:#a08060;margin:20px 0 10px">${act.title}</h4><p>${act.intro}</p>`;
+    html+=`<p style="margin-top:15px"><strong style="color:#d4a060">你的剧本：</strong>${char.script.act2}</p>`;
+  }else if(act.id===3){
+    html+=`<h4 style="color:#a08060;margin:20px 0 10px">${act.title}</h4><p>${act.intro}</p>`;
+    html+=`<p style="margin-top:15px"><strong style="color:#d4a060">你的剧本：</strong>${char.script.act3}</p>`;
+    html+=`<p style="margin-top:15px;color:#8b0000">💡 提示：本幕可以私聊，有些秘密只能私下说。</p>`;
+  }else if(act.id===4){
+    html+=`<h4 style="color:#a08060;margin:20px 0 10px">${act.title}</h4><p>${act.intro}</p>`;
+    html+=`<p style="margin-top:15px"><strong style="color:#d4a060">最终问题：</strong>${act.finalQuestion}</p>`;
+    html+=`<p style="margin-top:15px;color:#8b0000">请在"最终投票"页面投票。</p>`;
+  }
+  html+=`</div>`;
+  return html;
+}
+
+function renderClues(){
+  const clues=SCRIPT.acts[1].clues;
+  let html=`<h3 style="color:#a08060;margin-bottom:15px">公共线索（点击查看详情）</h3><div class="clue-grid">`;
+  clues.forEach(c=>{
+    const unlocked=gameState.unlockedClues.includes(c.id);
+    html+=`<div class="clue-card ${unlocked?'unlocked':'locked'}" onclick="${unlocked?`showClue('${c.id}')`:'unlockClue(\''+c.id+'\')'}">
+      <div class="clue-title">${unlocked?c.title:'???'}</div>
+      <div class="clue-desc">${unlocked?c.desc:'点击搜索此处的线索'}</div>
+      <div style="color:#666;font-size:11px;margin-top:8px">📍 ${c.location}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  return html;
+}
+
+function unlockClue(clueId){
+  if(gameState.isHost){
+    if(!gameState.unlockedClues.includes(clueId)){
+      gameState.unlockedClues.push(clueId);
+      broadcastState();
+      renderSidebar();
+      renderContent();
+      const clue=SCRIPT.acts[1].clues.find(c=>c.id===clueId);
+      addChat('系统',`发现了新线索：${clue.title}`,true);
+      broadcast({type:'system',message:`发现了新线索：${clue.title}`});
+      // DM解读线索
+      dmClueHint(clueId);
+      // AI玩家反应
+      aiChatReactToClue(clueId);
+    }
+  }else{
+    // 非房主：乐观更新本地，同时通知房主
+    if(!gameState.unlockedClues.includes(clueId)){
+      gameState.unlockedClues.push(clueId);
+      renderSidebar();
+      renderContent();
+    }
+    if(gameState.fbRoomRef){
+      fbSendMessage('clueUnlock',{clueId:clueId},'host');
+    }
+  }
+}
+
+function showClue(clueId){
+  const clue=SCRIPT.acts[1].clues.find(c=>c.id===clueId);
+  if(!clue)return;
+  document.getElementById('clueDetailTitle').textContent=clue.title;
+  document.getElementById('clueDetailContent').textContent=clue.content;
+  document.getElementById('clueDetail').classList.add('show');
+}
+
+function closeClueDetail(){
+  document.getElementById('clueDetail').classList.remove('show');
+}
+
+function renderPMList(){
+  let html=`<h3 style="color:#a08060;margin-bottom:15px">私聊列表</h3><div class="pm-list">`;
+  gameState.players.forEach(p=>{
+    if(p.id==='host'&&gameState.isHost)return;
+    if(p.name===gameState.myName)return;
+    const unread=gameState.pmHistory[p.id]?gameState.pmHistory[p.id].length:0;
+    html+=`<div class="pm-user" onclick="openPM('${p.id}','${p.name}')">
+      <span>${p.name}${p.charId?`（${SCRIPT.characters.find(c=>c.id===p.charId)?.name||''}）`:''}</span>
+      <span style="color:#666;font-size:12px">${unread>0?unread+'条消息':'开始私聊'}</span>
+    </div>`;
+  });
+  html+=`</div>`;
+  return html;
+}
+
+function openPM(userId,userName){
+  gameState.currentPM=userId;
+  document.getElementById('pmTargetName').textContent='与 '+userName+' 私聊';
+  document.getElementById('pmWindow').classList.add('show');
+  if(!gameState.pmHistory[userId])gameState.pmHistory[userId]=[];
+  renderPM();
+}
+
+function closePM(){
+  gameState.currentPM=null;
+  document.getElementById('pmWindow').classList.remove('show');
+}
+
+function renderPM(){
+  const msgs=gameState.pmHistory[gameState.currentPM]||[];
+  const box=document.getElementById('pmMessages');
+  box.innerHTML=msgs.map(m=>`<div class="pm-msg"><span class="sender">${m.from}：</span>${m.message}</div>`).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+function sendPM(){
+  const input=document.getElementById('pmInput');
+  const msg=input.value.trim();
+  if(!msg||!gameState.currentPM)return;
+  if(!gameState.pmHistory[gameState.currentPM])gameState.pmHistory[gameState.currentPM]=[];
+  gameState.pmHistory[gameState.currentPM].push({from:gameState.myName,message:msg});
+  renderPM();
+  input.value='';
+  if(gameState.isHost){
+    if(gameState.fbRoomRef){
+      fbSendMessage('pm',{from:'host',fromName:gameState.myName,message:msg},gameState.currentPM);
+    }
+  }else{
+    if(gameState.fbRoomRef){
+      fbSendMessage('pm',{from:gameState.myPlayerId,fromName:gameState.myName,message:msg},'host');
+    }
+  }
+}
+
+function renderHiddenClues(char){
+  const act=SCRIPT.acts[2];
+  const viewCharId=soloMode?soloViewCharId:(char?char.id:gameState.myCharId);
+  const myClue=act.hiddenClues.find(c=>c.target===viewCharId);
+  let html=`<h3 style="color:#a08060;margin-bottom:15px">隐藏线索（仅你可见）</h3>`;
+  if(myClue){
+    html+=`<div class="script-content"><h4 style="color:#8b0000">${myClue.title}</h4><p>${myClue.content}</p></div>`;
+  }else{
+    html+=`<p style="color:#666">暂无隐藏线索。</p>`;
+  }
+  html+=`<h4 style="color:#a08060;margin:20px 0 10px">建议私聊组合</h4><ul style="padding-left:20px;line-height:2">`;
+  act.pmPairs.forEach(pair=>{
+    const names=pair.slice(0,2).map(id=>SCRIPT.characters.find(c=>c.id===id)?.name).join(' 和 ');
+    html+=`<li>${names}：${pair[2]}</li>`;
+  });
+  html+=`</ul>`;
+  return html;
+}
+
+function renderVote(){
+  const act=SCRIPT.acts[3];
+  let html=`<div class="vote-area"><h3>${act.voteQuestion}</h3><div class="vote-options">`;
+  const suspects=[
+    {id:'qin',name:'覃秋宜',role:'冥婚新娘，被亲生父亲毒杀，怨念最强，发簪中藏有秘密'},
+    {id:'lin',name:'林养橙',role:'贴身丫鬟，目睹毒杀却不敢声张，双手红痕是仪式钥匙'},
+    {id:'huang',name:'黄立康',role:'冥婚新郎，被推下河溺亡，化名调查兄长失踪真相'},
+    {id:'ya',name:'崖微铭',role:'阴阳先生，主持献祭十年，手上六条人命，随身携带生死簿'}
+  ];
+  suspects.forEach(s=>{
+    const voted=gameState.votes[gameState.myName]===s.id;
+    html+=`<div class="vote-option ${voted?'selected':''}" onclick="castVote('${s.id}')">
+      <div class="vname">${s.name}</div>
+      <div class="vrole">${s.role}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  const votedCount=Object.keys(gameState.votes).length;
+  html+=`<p style="color:#666">已投票：${votedCount}/${gameState.players.length}</p>`;
+  if(soloMode&&votedCount<gameState.players.length){
+    html+=`<p style="color:#a08060;font-size:13px">💡 单人模式：你投票后，AI玩家将自动完成投票</p>`;
+  }
+  if(gameState.isHost&&votedCount>=gameState.players.length){
+    html+=`<button class="btn btn-primary" onclick="endVote()">公布结果并进入结局</button>`;
+  }
+  html+=`</div>`;
+  return html;
+}
+
+function castVote(target){
+  gameState.votes[gameState.myName]=target;
+  if(gameState.isHost){
+    broadcast({type:'voteUpdate',votes:gameState.votes});
+    // 单人模式：AI自动投票
+    if(soloMode){
+      const aiPlayers=gameState.players.filter(p=>p.id!=='solo');
+      const voteOptions=['qin','lin','huang','ya'];
+      aiPlayers.forEach((p,i)=>{
+        // AI根据角色倾向投票
+        let aiVote;
+        if(p.charId==='qin')aiVote='ya'; // 覃秋宜恨崖微铭助纣为虐
+        else if(p.charId==='huang')aiVote='ya'; // 黄立康知道崖微铭是杀兄仇人
+        else if(p.charId==='lin')aiVote='qin'; // 林养橙心疼小姐，觉得她怨念最重
+        else aiVote=voteOptions[Math.floor(Math.random()*voteOptions.length)];
+        gameState.votes[p.name]=aiVote;
+      });
+      addChat('DM','所有玩家已完成投票，即将公布结果...',true);
+      setTimeout(()=>endVote(),2000);
+    }
+    checkVoteComplete();
+  }else{
+    if(gameState.fbRoomRef){
+      fbSendMessage('vote',{voter:gameState.myName,target:target},'host');
+    }
+  }
+  renderContent();
+}
+
+function checkVoteComplete(){
+  if(!gameState.isHost)return;
+  if(Object.keys(gameState.votes).length>=gameState.players.length){
+    notify('所有人已投票，主持人可公布结果');
+  }
+}
+
+function endVote(){
+  if(!gameState.isHost)return;
+  // 统计投票
+  const counts={};
+  Object.values(gameState.votes).forEach(v=>counts[v]=(counts[v]||0)+1);
+  const maxVotes=Math.max(...Object.values(counts));
+  const topOption=Object.keys(counts).find(k=>counts[k]===maxVotes);
+  // 三结局触发逻辑
+  // 崖微铭最多→诅咒结局（独活，新守门人）
+  // 覃秋宜最多→同归结局（反噬，魂飞魄散）
+  // 林养橙/黄立康最多→破局结局（焚簿，全员解脱）
+  let ending;
+  if(topOption==='ya')ending='curse';
+  else if(topOption==='qin')ending='redeem';
+  else ending='truth';
+  gameState.phase='ending';
+  broadcast({type:'state',phase:'ending',ending});
+  if(gameState.fbRoomRef){
+    gameState.fbRoomRef.child('state').set({
+      phase:'ending',ending:ending,
+      currentAct:gameState.currentAct,
+      gameStartTime:gameState.gameStartTime,
+      unlockedClues:gameState.unlockedClues,
+      timestamp:Date.now()
+    });
+  }
+  showEnding(ending);
+}
+
+function nextAct(){
+  if(!gameState.isHost)return;
+  if(gameState.currentAct<SCRIPT.acts.length-1){
+    gameState.currentAct++;
+    gameState.actStartTime=Date.now();
+    updateBGMMood(gameState.currentAct);
+    const act=SCRIPT.acts[gameState.currentAct];
+    addChat('DM',`—— ${act.title} ——`,true);
+    broadcast({type:'system',message:`—— ${act.title} ——`});
+    broadcastState();
+    renderGame();
+    // DM分阶段发言
+    dmActIntro(gameState.currentAct);
+    dmStartGuide(gameState.currentAct);
+    // 单机模式：重启AI公屏互动
+    if(soloMode){aiChatStop();setTimeout(()=>aiChatStart(),5000);}
+  }
+}
+
+
+// ==================== AI玩家公屏互动系统 ====================
+let aiChatTimers=[];
+let aiChatLastSpeaker='';
+
+const AI_CHAT_DATA = {
+  qin: {
+    name:'覃秋宜',
+    act1:[
+      '我……我记得自己是怎么死的。我父亲，他在我的药里下了毒。',
+      '这不是冥婚。我父亲杀了我，还要把我配给一个死人。',
+      '你们看那些纸人，它们的眼睛在动。它们在看我们。',
+      '崖微铭，你说只有一个人能活着出去。你怎么知道的？你是不是早就知道会这样？',
+      '林养橙，你的手怎么了？为什么一直在发抖？',
+      '黄立康，你说你不记得自己怎么死的。你袖口的水还没干。',
+      '我在棺木里醒来的时候，听到指甲刮木头的声音。那是我自己的指甲。',
+      '红烛变成了绿色……这不是正常的冥婚仪式。',
+      '我死了三天了。可我还能说话，还能走路。我到底算什么？',
+      '我父亲为什么要这样对我？我是他的亲生女儿啊。'
+    ],
+    act2:[
+      '《阴亲录》……我在书房见过这本册子。我就是因为发现了它才被杀的。',
+      '小瓷瓶里是鹤顶红。那是我母亲的遗物，我父亲一直说那是首饰盒。',
+      '棺木里有旧的抓痕……不止我一个人在棺中醒来过。',
+      '那些牌位……七对半。我不是第一个，也不会是最后一个。',
+      '老井里全是白骨。覃家百年富贵，是用人命换来的。',
+      '崖微铭，你师父的信上说生死簿最后一页有破局之法。你看过吗？',
+      '族谱上每隔三年就有年轻人"意外身亡"。这不是巧合，是规律。',
+      '林养橙，你母亲也是覃家的丫鬟。她真的是病死的吗？',
+      '黄立康，牌位上有个黄文轩，他和你是什么关系？',
+      '镇魂水……崖微铭在我死后用它涂过我的额头。他想封住我的魂魄。'
+    ],
+    act3:[
+      '我发簪里藏着《阴亲录》的残页。上面写着破局之法——焚毁生死簿。',
+      '残页上还写着，如果死者怨念足够强，可以反噬主持者。但代价是魂飞魄散。',
+      '林养橙，我知道你看到了父亲下毒。我不怪你，他威胁你了对吗？',
+      '黄立康，你哥哥黄文轩是被崖微铭推下河的。我在牌位上看到了他的名字。',
+      '崖微铭，你杀了六个人。你说你是被迫的，但你手上的血洗得掉吗？',
+      '我父亲不仅杀了我，他还杀了我母亲。我母亲不是难产死的。',
+      '那些纸人……它们是历代祭品的魂魄。它们在等我们救它们。',
+      '焚簿需要有人以阳寿为引。如果四人同心，每人只折寿两载。',
+      '我已经死了，阳寿对我来说没有意义。让我来做那个焚簿的人。',
+      '我不想再恨了。恨让我变成了怪物。我只想结束这一切。'
+    ],
+    act4:[
+      '我选择焚簿。生死簿是一切罪恶的根源，烧了它，历代亡魂才能解脱。',
+      '崖微铭，如果你真的想赎罪，就帮我们一起破局。',
+      '林养橙，你的红痕是钥匙。不要害怕，我会陪着你。',
+      '黄立康，你哥哥在河底等了十年。让他安息吧。',
+      '我投票给崖微铭——不是因为恨他，是因为他说过他自愿留下。',
+      '如果我魂飞魄散，能换所有人自由，那我愿意。',
+      '我这辈子最后悔的事，就是生在覃家。但我不后悔遇见你们。',
+      '养橙，好好活着。连我那份一起。',
+      '红烛快灭了。天要亮了。',
+      '纸人在哭……它们终于可以解脱了。'
+    ],
+    clueReactions:{
+      c1:'喜服上的八字写着"阴人·怨气极重"。崖微铭，你早就知道我会变成这样？',
+      c2:'四具纸人对应四次献祭。它们的眼睛……是真的人眼。',
+      c3:'棺木里的旧抓痕，在我之前还有别的"新娘"。她们也曾醒来过。',
+      c4:'八个牌位，七对半。黄文轩的旁边为什么没有女方名字？',
+      c5:'《阴亲录》最后几页是我撕掉的。我把它藏在了发簪里。',
+      c6:'鹤顶红……我认得这个瓶子。我母亲死后，它就一直在父亲书房里。',
+      c7:'老井里全是白骨……覃家百年的富贵，全是用命堆出来的。',
+      c8:'崖微铭，你师父的信上说破局之法是什么？你为什么不告诉我们？',
+      c9:'镇魂水是用来封魂魄的。林养橙，你的手就是泡过这个才变红的？',
+      c10:'族谱上那些"意外身亡"的人，全都是祭品。我母亲也是其中之一。'
+    }
+  },
+  lin: {
+    name:'林养橙',
+    act1:[
+      '我……我看到了。我看到老爷在大小姐的药里放了东西。',
+      '我的手……这红痕洗不掉。是崖先生让我用那种红色的水擦灵堂留下的。',
+      '大小姐，你真的是小姐吗？你的眼睛……和以前不一样了。',
+      '子时三刻的时候，我看到大小姐的指甲在长。然后纸人就睁眼了。',
+      '我从小在覃家长大，这种事……不是第一次发生。',
+      '崖先生，你说的"选命"是什么意思？为什么只有一个人能出去？',
+      '黄公子，你是三日前溺亡的？三日前……那天晚上我看到崖先生从河边回来。',
+      '灵堂的大门是从外面锁上的。有人故意把我们关在这里。',
+      '我好害怕……那些纸人一直在看我。',
+      '大小姐，对不起。我看到了，但我不敢说。他威胁我。'
+    ],
+    act2:[
+      '《阴亲录》……我听母亲提过这个名字，但她从来不肯多说。',
+      '药方上"加鹤顶红三分"的字……是老爷的笔迹。是他杀了大小姐。',
+      '棺木里的暗格有碎玉，刻着"赵"字……那是光绪年间的祭品。',
+      '供桌上的牌位……八个。我从小就觉得供桌后面不对劲。',
+      '老井被封死了，上面贴着符纸。我小时候靠近过一次，被母亲打了一顿。',
+      '崖先生的客房里有六个人的生辰八字……他杀过六个人。',
+      '镇魂水里混了黑狗血。我的手泡了一夜，从此就变成了这样。',
+      '族谱上写着"民国七年，丫鬟林氏所生一子，夭折"……林氏是我母亲。',
+      '大小姐死前给我留了一把钥匙，让我去开书房暗格。我一直没敢去。',
+      '湿漉漉的脚印……是黄公子的。他的尸体是自己走进灵堂的。'
+    ],
+    act3:[
+      '我母亲是被老爷毒杀的。她想带我逃走，被发现了。',
+      '我父亲是二十年前的祭品。我从出生起就是覃家的"备用祭品"。',
+      '我的红痕在发烫……我听到了声音，是历代"见证人"的声音。',
+      '它们说红痕是钥匙，可以触碰生死簿而不被反噬。焚簿的时候让我来。',
+      '大小姐，你给我的信我看到了。你一直在保护我。',
+      '黄公子，你哥哥的牌位前香灰还是温的。有人最近来祭拜过他。',
+      '崖先生，你客房里我母亲的名字也在生辰八字里。你本来也要杀她？',
+      '我不再害怕了。大小姐不怕，我也不怕。',
+      '如果焚簿需要折寿，我愿意承担。我这条命本来就是捡来的。',
+      '那些声音在哭……它们说"别让我们白死"。'
+    ],
+    act4:[
+      '我来按生死簿。我的红痕能碰它，不会被反噬。',
+      '崖先生，如果你真的想赎罪，就把阳寿借给我们。',
+      '大小姐，你不能魂飞魄散。你已经够苦了。',
+      '黄公子，你哥哥在等你。我们一起让他安息。',
+      '我投票给崖先生。他说过他自愿多折三十年阳寿。',
+      '我从小在覃家当丫鬟，从来没有为自己活过。今天我想做一次主。',
+      '焚簿之后，我要把覃家的罪行公之于众。',
+      '那些纸人……它们不再可怕了。它们在笑。',
+      '大小姐，如果有下辈子，我还做你的丫鬟。',
+      '天亮了。我们终于可以出去了。'
+    ],
+    clueReactions:{
+      c1:'喜服上的"阴人·怨气极重"……崖先生早就知道大小姐会变成这样。',
+      c2:'纸人的眼睛一直跟着我们转。它们是活人做的吗？',
+      c3:'棺木里的旧抓痕……以前的新娘也醒来过。她们后来怎么样了？',
+      c4:'黄文轩的牌位旁没有女方名字……他为什么没有配成阴亲？',
+      c5:'《阴亲录》被撕掉了几页。大小姐，是你撕的对吗？',
+      c6:'那个小瓷瓶是夫人的遗物。老爷一直说那是首饰盒……',
+      c7:'我娘不让我靠近那口井。她说井里有"东西"。',
+      c8:'崖先生，你师父的信最后一句话被涂掉了。上面写了什么？',
+      c9:'这铜盆里的红色水就是镇魂水。我的手就是泡了这个才洗不掉的。',
+      c10:'族谱上"林氏所生一子夭折"……那个孩子是我哥哥还是我弟弟？'
+    }
+  },
+  huang: {
+    name:'黄立康',
+    act1:[
+      '我最后的记忆是在石桥上散步，然后有人从背后推了我一把。',
+      '我浑身湿透了……我是淹死的？可我怎么还能说话？',
+      '崖微铭？你穿道袍——推我下河的人，穿的就是道袍！',
+      '我不是路过的书生。我叫黄文康，我哥哥十年前在这个镇上失踪了。',
+      '我哥哥最后一封信说，覃家有问题，每三年要死两个人。',
+      '我身上有一块玉佩，刻着"覃"字和"文轩"。这是我哥哥的东西。',
+      '覃小姐，你父亲为什么要杀你？你知道些什么？',
+      '林姑娘，你说你看到崖微铭从河边回来？是三日前吗？',
+      '我在水里看到了河底有白骨。不止一具。',
+      '这桩冥婚是假的。我根本不认识覃小姐，他们只是需要一个"阳人"。'
+    ],
+    act2:[
+      '我哥哥的牌位！黄文轩……他十年前就死了。',
+      '他的牌位旁没有女方名字。他没有配成阴亲——他是被单独杀死的。',
+      '《阴亲录》记载每三年献祭一对男女。我哥哥是"阳人"，那"阴人"呢？',
+      '老井里的白骨……我哥哥是不是也在里面？',
+      '崖微铭的客房里有六个人的生辰八字。我哥哥的一定也在。',
+      '喜服袖口的河泥还没干。我三天前死的，河水还在滴。',
+      '族谱上的照片，十年前那个穿道袍的年轻人……是年轻时的崖微铭。',
+      '我哥哥在信里说阴阳先生有个小徒弟，姓文。崖微铭，你本来姓文？',
+      '镇魂水旁的赤脚脚印是我的。我的尸体是自己走到灵堂来的。',
+      '玉佩是我哥哥的。他在被推下河前把它扔上了岸。他在留证据。'
+    ],
+    act3:[
+      '我记起来了。推我下河的就是崖微铭。他在桥上翻开册子，在我名字上画了圈。',
+      '河底有一张纸条，是我哥哥的字迹："让我弟弟来报仇。"',
+      '崖微铭推我时手在发抖，他说"对不起"。他不是冷血的人。',
+      '他的道袍内侧绣着"文"字。他可能就是我哥哥信里提到的那个小徒弟。',
+      '我恨他杀了我哥哥。但如果他真的想赎罪……我不知道。',
+      '焚簿可以释放所有亡魂，包括我哥哥。这比报仇重要。',
+      '林姑娘，你父亲也是被崖微铭杀的？我们的仇人是同一个。',
+      '覃小姐，你发簪里的残页能证明一切。等出去了，我要交给县衙。',
+      '我已经死了，阳寿对我没有意义。焚簿的阳寿由我来承担。',
+      '我哥哥在河底等了十年。我不想再等了。'
+    ],
+    act4:[
+      '崖微铭杀了我和我哥哥。但我同意让他赎罪——焚簿，而不是投票让他留下。',
+      '如果他成为新的守门人，诅咒还会继续。我不要哥哥白死。',
+      '覃小姐，你的残页是破局的关键。林姑娘，你的红痕是钥匙。',
+      '我投票给崖微铭，但不是让他留下——是让他亲手焚簿赎罪。',
+      '我哥哥说过，真相比报仇重要。今天我终于明白了。',
+      '崖微铭，如果你还有一点良心，就帮我们烧了那本册子。',
+      '我已经死了，没什么好怕的。但活着的人要好好活下去。',
+      '林姑娘，出去之后把真相公之于众。让所有人知道覃家做了什么。',
+      '河底的白骨……终于可以安息了。',
+      '哥，我来了。对不起，让你等了十年。'
+    ],
+    clueReactions:{
+      c1:'男式喜服袖口的河泥……我就是穿着这件衣服被放进棺木的。',
+      c2:'纸人上的名字……赵氏、钱氏、孙氏、覃氏。每三年一个。',
+      c3:'棺木里有旧抓痕？难道以前的"新郎"也在棺中醒来过？',
+      c4:'八个牌位，七对半。我哥哥的牌位旁为什么空着？他的"阴人"去哪了？',
+      c5:'《阴亲录》……我哥哥信里提到的就是这本册子。',
+      c6:'鹤顶红？覃老爷用这个杀了自己的女儿？虎毒不食子……',
+      c7:'老井里的白骨……我哥哥的尸骨是不是也在下面？',
+      c8:'崖微铭师父的信说献祭是邪术。他自己知道，为什么还要做？',
+      c9:'镇魂水……崖微铭在我死后也用这个涂过我的额头吗？',
+      c10:'族谱上十年前那个穿道袍的年轻人，就是年轻时的崖微铭。'
+    }
+  },
+  ya: {
+    name:'崖微铭',
+    act1:[
+      '……困灵局已成。四个人里只有一个能活着出去。这是规矩。',
+      '我是阴阳先生崖微铭，这场冥婚是我主持的。但现在的情况，超出了我的预料。',
+      '纸人睁眼、红烛变绿、大门锁死——这是困灵局，不是普通的冥婚。',
+      '黄立康，你袖口的水……你是溺死的，魂魄被镇魂水引到了这里。',
+      '林养橙，把你的手藏好。红痕是见证人印记，不要让其他人看到。',
+      '覃秋宜，你的怨念太强了。你若不收敛，困灵局会越来越凶险。',
+      '我没有隐瞒什么。我知道的和你们一样多。',
+      '子时三刻是阴阳交替之时，在这个时刻形成的困灵局，最凶。',
+      '不要靠近那些纸人。它们是历代祭品的魂魄所化，会蛊惑人心。',
+      '想出去，就先弄清楚你们为什么会在这里。'
+    ],
+    act2:[
+      '《阴亲录》……这是覃家祖传的邪术，我也是后来才知道真相的。',
+      '小瓷瓶是鹤顶红。覃守元杀了自己的女儿，还要让她做祭品。',
+      '棺木里的旧抓痕……在我之前，我师父主持过五次献祭。',
+      '八个牌位。我主持了三次，师父主持了五次。十三条人命。',
+      '老井是献祭处。祭品死后，部分遗物和尸骨被投入井中。',
+      '我师父的信……他说破局之法在生死簿最后一页。我没有看过。',
+      '六个人的生辰八字……那是我主持的三次献祭的祭品。我记得他们每一个人。',
+      '族谱上的照片是我和师父。我十二岁就跟着他了。',
+      '镇魂水是朱砂混黑狗血，用来封印魂魄。林养橙的手是被我害的。',
+      '覃守元威胁我——生死簿上也有我的名字，不做就杀了我。'
+    ],
+    act3:[
+      '……我看过了。生死簿最后一页写着破局之法。',
+      '焚簿于红烛，以阳寿为引。若四人同心，每人折寿两载，皆可存活。',
+      '我不敢说。因为我杀了黄立康和他哥哥，我杀了六个人。我怕你们选我做锚点。',
+      '我本来计划利用困灵局吞噬你们的魂魄获得长生。但我师父的信让我改变了主意。',
+      '黄立康，你哥哥是我推下河的。你也是。我不奢求原谅。',
+      '林养橙，你父亲也是我杀的。二十年前的那次献祭，是我师父逼我做的第一次。',
+      '覃秋宜，我在你死后涂镇魂水，是覃守元的命令。对不起。',
+      '我自愿多折三十年阳寿。如果焚簿需要有人带头，让我来。',
+      '投票选锚点只会让诅咒延续。焚簿才是真正的破局。',
+      '我杀了一辈子人，最后想做一件对的事。'
+    ],
+    act4:[
+      '我来焚簿。我欠的债，我自己还。',
+      '不要投票选锚点。那只会让我变成新的守门人，诅咒永远不会结束。',
+      '黄立康，我知道你恨我。等焚簿之后，你要杀要剐，我都认。',
+      '林养橙，你的红痕是焚簿的关键。把你的手按在生死簿上。',
+      '覃秋宜，不要选择反噬。魂飞魄散太不值得了。你值得解脱。',
+      '我投票给自己。如果你们非要选一个锚点，那就是我。但我更希望和你们一起焚簿。',
+      '师父，弟子终于敢做对的事了。',
+      '三十年阳寿算什么。我手上的血，三百年也还不清。',
+      '烧了生死簿，历代亡魂就能解脱。包括我杀的那些人。',
+      '红烛将尽，时间不多了。做决定吧。'
+    ],
+    clueReactions:{
+      c1:'喜服上的八字是我批的。"怨气极重"……我当时就提醒过覃守元，但他不听。',
+      c2:'纸人是我扎的。但眼睛不是我放的——是困灵局自己形成的。',
+      c3:'旧抓痕是以前的"新娘"留下的。她们的魂魄被封在棺木里，永远出不去。',
+      c4:'黄文轩没有配成阴亲，因为他的"阴人"在仪式前病死了。他被单独投入了井中。',
+      c5:'《阴亲录》最后几页被撕掉了？覃秋宜，是你做的？',
+      c6:'鹤顶红是覃守元的。他用同样的方法杀过很多人，包括他的妻子。',
+      c7:'老井里的白骨……有些是我亲手扔下去的。我这辈子罪孽深重。',
+      c8:'师父的信……他说破局之法在生死簿最后一页。我会看的。',
+      c9:'镇魂水是我配的。林养橙的手是我害的。我会想办法治好她。',
+      c10:'族谱上那个年轻人就是我。我十二岁跟着师父，十五岁开始帮他杀人。'
+    }
+  }
+};
+
+function aiChatStart(){
+  if(!soloMode)return;
+  aiChatStop();
+  const scheduleNext=()=>{
+    if(gameState.phase!=='game')return;
+    const delay=15000+Math.random()*20000; // 15-35秒随机间隔
+    const timer=setTimeout(()=>{
+      aiChatSpeak();
+      scheduleNext();
+    },delay);
+    aiChatTimers.push(timer);
+  };
+  scheduleNext();
+}
+
+function aiChatStop(){
+  aiChatTimers.forEach(t=>clearTimeout(t));
+  aiChatTimers=[];
+}
+
+function aiChatSpeak(){
+  if(!soloMode||gameState.phase!=='game')return;
+  const aiPlayers=gameState.players.filter(p=>p.id!=='solo');
+  if(!aiPlayers.length)return;
+  // 避免同一个AI连续发言
+  let candidates=aiPlayers.filter(p=>p.name!==aiChatLastSpeaker);
+  if(!candidates.length)candidates=aiPlayers;
+  const speaker=candidates[Math.floor(Math.random()*candidates.length)];
+  aiChatLastSpeaker=speaker.name;
+  const charId=speaker.charId;
+  const data=AI_CHAT_DATA[charId];
+  if(!data)return;
+  const actKey='act'+(gameState.currentAct+1);
+  let pool=data[actKey]||[];
+  // 30%概率说线索相关的话
+  if(Math.random()<0.3&&gameState.unlockedClues.length>0){
+    const recentClue=gameState.unlockedClues[gameState.unlockedClues.length-1];
+    if(data.clueReactions&&data.clueReactions[recentClue]){
+      pool=[data.clueReactions[recentClue]];
+    }
+  }
+  if(!pool.length)return;
+  const msg=pool[Math.floor(Math.random()*pool.length)];
+  addChat(speaker.name,msg,false);
+}
+
+function aiChatReactToClue(clueId){
+  if(!soloMode||gameState.phase!=='game')return;
+  // 解锁线索后，有50%概率立即有AI反应
+  if(Math.random()>0.5)return;
+  setTimeout(()=>{
+    const aiPlayers=gameState.players.filter(p=>p.id!=='solo');
+    if(!aiPlayers.length)return;
+    const speaker=aiPlayers[Math.floor(Math.random()*aiPlayers.length)];
+    const data=AI_CHAT_DATA[speaker.charId];
+    if(data&&data.clueReactions&&data.clueReactions[clueId]){
+      aiChatLastSpeaker=speaker.name;
+      addChat(speaker.name,data.clueReactions[clueId],false);
+    }
+  },2000+Math.random()*3000);
+}
+
+// ==================== AI DM 主持系统 ====================
+let dmTimers=[];
+
+function dmClearTimers(){
+  dmTimers.forEach(t=>clearTimeout(t));
+  dmTimers=[];
+}
+
+let ttsEnabled=false;
+function dmSay(text,delay=0){
+  if(!gameState.isHost)return;
+  const timer=setTimeout(()=>{
+    addChat('DM',text,false);
+    if(gameState.fbRoomRef){
+      fbSendMessage('chat',{name:'DM',message:text},'all');
+    }
+    // TTS语音朗读
+    if(ttsEnabled && 'speechSynthesis' in window){
+      try{
+        const utter=new SpeechSynthesisUtterance(text);
+        utter.lang='zh-CN';
+        utter.rate=0.9;
+        const savedVoice=localStorage.getItem('human_voice');
+        if(savedVoice){
+          const voices=speechSynthesis.getVoices();
+          const v=voices.find(x=>x.name===savedVoice);
+          if(v)utter.voice=v;
+        }
+        speechSynthesis.speak(utter);
+      }catch(e){}
+    }
+  },delay);
+  dmTimers.push(timer);
+}
+
+function toggleTTS(){
+  ttsEnabled=!ttsEnabled;
+  const btn=document.getElementById('ttsToggle');
+  if(btn)btn.textContent=ttsEnabled?'🔊':'🔇';
+  localStorage.setItem('human_tts',ttsEnabled?'1':'0');
+  if(!ttsEnabled && 'speechSynthesis' in window){
+    speechSynthesis.cancel();
+  }
+  notify(ttsEnabled?'DM语音朗读已开启':'DM语音朗读已关闭');
+}
+
+function toggleTheme(){
+  document.body.classList.toggle('day-mode');
+  const isDay=document.body.classList.contains('day-mode');
+  const btn=document.getElementById('themeToggle');
+  if(btn)btn.textContent=isDay?'🌙':'☀️';
+  const hbtn=document.getElementById('homeThemeToggle');
+  if(hbtn)hbtn.textContent=isDay?'🌙':'☀️';
+  localStorage.setItem('human_theme',isDay?'day':'night');
+  notify(isDay?'已切换到日间模式':'已切换到夜间模式');
+}
+
+// 语音选择
+let availableVoices=[];
+function loadVoices(){
+  if(!('speechSynthesis' in window))return;
+  availableVoices=speechSynthesis.getVoices().filter(v=>v.lang.startsWith('zh'));
+  const sel=document.getElementById('voiceSelect');
+  if(!sel)return;
+  sel.innerHTML='<option value="">默认音色</option>';
+  availableVoices.forEach(v=>{
+    const opt=document.createElement('option');
+    opt.value=v.name;
+    opt.textContent=v.name.replace(/Google |Microsoft /g,'');
+    sel.appendChild(opt);
+  });
+  const saved=localStorage.getItem('human_voice');
+  if(saved)sel.value=saved;
+}
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged=loadVoices;
+  setTimeout(loadVoices,500);
+}
+function changeVoice(name){
+  localStorage.setItem('human_voice',name);
+  if(name && ttsEnabled && 'speechSynthesis' in window){
+    speechSynthesis.cancel();
+    try{
+      const utter=new SpeechSynthesisUtterance('大家好，我是今天的DM');
+      utter.lang='zh-CN';
+      utter.rate=0.9;
+      const v=availableVoices.find(x=>x.name===name);
+      if(v)utter.voice=v;
+      speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+  notify(name?'已切换语音：'+name:'已恢复默认语音');
+}
+
+// 玩家列表
+function togglePlayerList(){
+  const panel=document.getElementById('playerListPanel');
+  panel.classList.toggle('show');
+  if(panel.classList.contains('show'))renderPlayerList();
+}
+function renderPlayerList(){
+  const container=document.getElementById('playerListContent');
+  if(!container)return;
+  let html='';
+  gameState.players.forEach(p=>{
+    const char=SCRIPT.characters.find(c=>c.id===p.charId);
+    const isHost=p.id==='host'||p.isHost;
+    html+=`<div class="player-list-item">
+      <span>${p.name}${isHost?'<span class="host-badge">房主</span>':''}</span>
+      <span class="player-role">${char?char.name:'未分配'}</span>
+    </div>`;
+  });
+  if(!gameState.players.length)html='<p style="color:#666;text-align:center;padding:20px">暂无玩家</p>';
+  container.innerHTML=html;
+}
+
+// 初始化主题和TTS设置
+(function initSettings(){
+  const savedTheme=localStorage.getItem('human_theme');
+  if(savedTheme==='day'){
+    document.body.classList.add('day-mode');
+    setTimeout(()=>{
+      const btn=document.getElementById('themeToggle');if(btn)btn.textContent='🌙';
+      const hbtn=document.getElementById('homeThemeToggle');if(hbtn)hbtn.textContent='🌙';
+    },500);
+  }
+  const savedTTS=localStorage.getItem('human_tts');
+  if(savedTTS==='1'){
+    ttsEnabled=true;
+    setTimeout(()=>{const btn=document.getElementById('ttsToggle');if(btn)btn.textContent='🔊';},500);
+  }
+  setTimeout(loadVoices,800);
+})();
+
+
+function dmActIntro(actIndex){
+  dmClearTimers();
+  const act=SCRIPT.acts[actIndex];
+  if(!act)return;
+
+  if(actIndex===0){
+    // 第一幕：冥婚
+    dmSay(act.intro,500);
+    dmSay('欢迎来到覃家灵堂。我是今晚的DM，将全程主持这场冥婚。',2500);
+    dmSay('首先，请各位做自我介绍。说说你是谁，你是怎么来到这座灵堂的。',4500);
+    dmSay('💡 提示：你可以在下方公聊区发言。阅读左侧"我的剧本"了解你的角色背景和秘密。',7000);
+    dmSay('注意——你们当中有两个人已经死了。红烛变绿，纸人睁眼，这不是普通的冥婚。',10000);
+  }else if(actIndex===1){
+    // 第二幕：搜证
+    dmSay(act.intro,500);
+    dmSay('现在进入搜证环节。点击左侧的"🔍 公共线索"标签，查看并解锁你发现的线索。',3000);
+    dmSay('💡 提示：每条线索都需要点击解锁。解锁后所有人都能看到内容。仔细阅读，线索之间可能存在关联。',6000);
+    dmSay('灵堂、棺木、书房、后院——四个区域都可以搜索。覃家百年的秘密，就藏在这座宅子里。',9000);
+  }else if(actIndex===2){
+    // 第三幕：纸人
+    dmSay(act.intro,500);
+    dmSay('纸人在低语。每个人都有自己的秘密。点击左侧的"🔮 隐藏线索"，查看只有你能看到的信息。',3000);
+    dmSay('有些话，不适合在公开场合说。点击"💬 私聊"，和特定的人单独交流。',6000);
+    dmSay('💡 提示：建议的私聊组合已经列在隐藏线索页面下方。某些真相，只有在私聊中才能揭开。',9000);
+  }else if(actIndex===3){
+    // 第四幕：选命
+    dmSay(act.intro,500);
+    dmSay('红烛将尽，纸人逼近。是时候说出一切了。请大家进行最后的公聊讨论。',3000);
+    dmSay(`最终问题：${act.finalQuestion}`,5500);
+    dmSay('讨论结束后，点击左侧"🗳️ 最终投票"，匿名投出你认为应该留在灵堂的人。',8500);
+  }
+}
+
+function dmClueHint(clueId){
+  const hints={
+    c1:'冥婚喜服的男式袖口沾着河泥，还没有干透。黄立康，你真的是意外落水吗？',
+    c2:'四具纸人对应四次冥婚，纸人的眼睛是真正的人眼。它们在看着你们。',
+    c3:'棺木中有多组抓痕——不止覃秋宜一个人在棺中醒来过。这口棺材以前装过谁？',
+    c4:'供桌上藏着八个牌位，七对半。黄文轩的牌位旁女方名字空着——他为什么没有配成阴亲？',
+    c5:'《阴亲录》记载了覃家百年献祭仪式。最后几页被撕掉了——撕页的人是谁？',
+    c6:'小瓷瓶里是鹤顶红，药方上"加鹤顶红三分"的笔迹是覃守元的。覃秋宜是被亲生父亲毒死的。',
+    c7:'老井里有十几具白骨和锈蚀首饰，井壁上刻着历代祭品的名字。这口井是覃家的献祭处。',
+    c8:'崖微铭师父的信说阴亲献祭是邪术，生死簿最后一页有破局之法，但最后一句话被墨涂掉了。',
+    c9:'镇魂水用来封印魂魄，湿漉漉的赤脚脚印从灵堂大门延伸到偏厅——黄立康的尸体是自己走进来的。',
+    c10:'族谱显示覃家从光绪二十年开始"气运兴隆"，每隔三年就有年轻人"意外身亡"。林养橙的母亲也是覃家丫鬟。'
+  };
+  if(hints[clueId]){
+    dmSay(`📌 线索解读：${hints[clueId]}`,1500);
+  }
+}
+
+// DM定时引导（每幕每隔一段时间发一个引导问题）
+function dmStartGuide(actIndex){
+  const guides={
+    0:[
+      '冥婚当夜，红烛变绿，纸人睁眼。你们四个人被困在灵堂里。你现在是什么感觉？',
+      '覃秋宜，你从棺木中醒来。你记得自己是怎么死的吗？',
+      '黄立康，你浑身湿透地醒来，对自己的死毫无记忆。你最后的记忆是什么？',
+      '林养橙，你双手的红痕是怎么来的？你在害怕什么？',
+      '崖微铭，你说这是"困灵局"，只有一个人能活着出去。你是怎么知道的？',
+      '你们相信这世上有鬼吗？你们觉得自己现在是活着还是死了？',
+      '崖微铭说的话，你们信几分？他有没有隐瞒什么？'
+    ],
+    1:[
+      '《阴亲录》记载了覃家百年的献祭仪式。每三年一对青年男女——这不是冥婚，是杀人。',
+      '覃秋宜是被亲生父亲毒杀的。小瓷瓶里的鹤顶红和药方上的笔迹，都指向覃守元。',
+      '老井里有十几具白骨，井壁上刻着历代祭品的名字。覃家百年富贵，是用人命换来的。',
+      '供桌上有八个牌位，黄文轩的牌位旁女方名字空着。黄立康，你哥哥当年发生了什么？',
+      '崖微铭师父的信说生死簿最后一页有破局之法，但关键内容被墨涂掉了。崖微铭，你知道破局的方法吗？',
+      '族谱显示林养橙的母亲也是覃家丫鬟，她"病死"的记录有蹊跷。林养橙，你的身世是什么？',
+      '搜证差不多了。整理一下：这桩冥婚背后到底藏着什么阴谋？谁在说谎？'
+    ],
+    2:[
+      '深夜的私聊，应该揭开了不少秘密。有人愿意在公聊中分享吗？',
+      '黄立康，你记起自己是怎么死的了吗？推你下河的人，就在这座灵堂里。',
+      '林养橙，你的红痕不只是印记——它是开启封印的钥匙。你打算怎么做？',
+      '崖微铭，生死簿最后一页到底写了什么？你是不是一直在隐瞒破局的方法？',
+      '覃秋宜，你发簪里藏着什么？你从什么时候开始怀疑自己的父亲？',
+      '你们四个人的命运都被覃家联系在了一起。是继续互相猜忌，还是联手破局？',
+      '红烛快燃尽了。在最后投票之前，你们还有什么话想说？'
+    ],
+    3:[
+      '最后的讨论时间。每个人都应该说出你知道的全部真相。',
+      '崖微铭，你杀了黄立康和他哥哥，你杀了六个人。你打算怎么赎罪？',
+      '破局之法是焚毁生死簿，但需要四人同心分担阳寿。你们愿意和杀死自己亲人的人一起破局吗？',
+      '如果投票选出一人留下，那个人会变成新的守门人。你们希望谁留下？',
+      '覃秋宜，你可以选择反噬——让整个覃家为你陪葬，但你会魂飞魄散。你会怎么选？',
+      '林养橙，你的红痕是焚簿的关键。你愿意承担这个责任吗？',
+      '投票之前，最后确认一下：你们真的了解全部真相了吗？'
+    ]
+  };
+  const list=guides[actIndex]||[];
+  if(!list.length)return;
+  let idx=0;
+  const sendNext=()=>{
+    if(idx>=list.length)return;
+    dmSay(list[idx],0);
+    idx++;
+    const timer=setTimeout(sendNext,45000+Math.random()*15000);
+    dmTimers.push(timer);
+  };
+  const timer=setTimeout(sendNext,20000);
+  dmTimers.push(timer);
+}
+function addChat(name,message,isSystem){
+  gameState.chatHistory.push({name,message,isSystem});
+  const box=document.getElementById('chatMessages');
+  const cls=isSystem?'system':(name==='DM'?'dm':'');
+  const nameDisplay=(name==='DM'&&!isSystem)?'<span class="dm-tag">DM</span>':name;
+  box.innerHTML+=`<div class="chat-msg ${cls}"><span class="sender">${nameDisplay}：</span>${message.replace(/\n/g,'<br>')}</div>`;
+  box.scrollTop=box.scrollHeight;
+}
+
+function sendChat(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  addChat(gameState.myName,msg,false);
+  if(gameState.fbRoomRef){
+    fbSendMessage('chat',{name:gameState.myName,message:msg},'all');
+  }
+  input.value='';
+}
+
+// ==================== 结局与复盘 ====================
+function showEnding(endingType){
+  showScreen('ending');
+  const ending=SCRIPT.endings[endingType];
+  document.getElementById('endingTitle').textContent=ending.title;
+  document.getElementById('endingText').innerHTML=ending.text.replace(/\n/g,'<br>');
+}
+
+function showReview(){
+  if(gameState.isHost && gameState.fbRoomRef){
+    gameState.fbRoomRef.child('state').set({
+      phase:'review',
+      currentAct:gameState.currentAct,
+      gameStartTime:gameState.gameStartTime,
+      unlockedClues:gameState.unlockedClues,
+      timestamp:Date.now()
+    });
+    broadcast({type:'state',phase:'review'});
+  }
+  showScreen('review');
+  const r=SCRIPT.review;
+  let html=`<div class="review-section"><h3>📖 故事真相</h3><p>${r.truth.replace(/\n/g,'<br>')}</p></div>`;
+  html+=`<div class="review-section"><h3>👥 人物解析</h3>`;
+  Object.entries(r.characters).forEach(([id,desc])=>{
+    const c=SCRIPT.characters.find(x=>x.id===id);
+    html+=`<h4>${c?c.name:id}</h4><p>${desc}</p>`;
+  });
+  html+=`</div>`;
+  html+=`<div class="review-section"><h3>📅 时间线</h3><p>${r.timeline.replace(/\n/g,'<br>')}</p></div>`;
+  document.getElementById('reviewContent').innerHTML=html;
+}
+
+function backToHome(){
+  // 停止AI发言
+  aiChatStop();
+  // 如果是房主，保存房主身份以便重连
+  if(gameState.isHost && gameState.roomId){
+    localStorage.setItem('human_host_'+gameState.roomId,'1');
+  }
+  // 清理状态（保留Firebase实例）
+  const savedFbApp=gameState.fbApp;
+  const savedFbDb=gameState.fbDb;
+  fbCleanup();
+  gameState={phase:'home',isHost:false,roomId:'',myName:'',myCharId:null,players:[],currentAct:0,actStartTime:0,unlockedClues:[],hiddenCluesShown:[],chatHistory:[],pmHistory:{},currentPM:null,votes:{},gameStartTime:0,cgIndex:0,fbApp:savedFbApp,fbDb:savedFbDb,fbUnsubscribes:[]};
+  document.getElementById('playerName').value='';
+  document.getElementById('roomIdInput').value='';
+  document.getElementById('joinArea').classList.add('hidden');
+  showScreen('home');
+}
+
+// 初始化
+document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+document.getElementById('pmInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendPM();});
+</script>
+</body>
+</html>
