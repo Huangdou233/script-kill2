@@ -477,7 +477,8 @@ body.day-mode .btn-secondary{background:#fff;color:#5a3a2a;border:1px solid #c9b
         </div>
         <div class="chat-messages scrollbar" id="chatMessages"></div>
         <div class="chat-input">
-          <input type="text" id="chatInput" placeholder="输入公聊内容..." onkeydown="if(event.key==='Enter')sendChat()">
+          <input type="text" id="chatInput" placeholder="输入公聊内容...（@DM 可直接呼叫主持）" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn" onclick="insertDmMention()" style="padding:8px 12px;font-size:12px;">@DM</button>
           <button class="btn" onclick="sendChat()">发送</button>
         </div>
       </div>
@@ -1332,7 +1333,7 @@ function updateLobby(){
     </div>
   `).join('');
   if(gameState.isHost){
-    const allReady=gameState.players.length>=4&&gameState.players.every(p=>p.ready);
+    const allReady=gameState.players.length>=5&&gameState.players.every(p=>p.ready);
     document.getElementById('startBtn').classList.toggle('hidden',!allReady);
     document.getElementById('readyBtn').textContent=gameState.players.find(p=>p.id==='host')?.ready?'取消准备':'准备';
     const disbandBtn=document.getElementById('disbandBtn');
@@ -1498,8 +1499,8 @@ function startSoloMode(){
   gameState.myName=name;
   gameState.isHost=true;
   soloMode=true;
-  // 创建6个玩家（1个真人+5个AI）
-  const aiNames=['AI·覃秋宜','AI·黄立康','AI·林养橙'];
+  // 创建5个玩家（1个真人+4个AI）
+  const aiNames=['AI·玩家1','AI·玩家2','AI·玩家3','AI·玩家4'];
   gameState.players=[{id:'solo',name,charId:null,ready:true}];
   aiNames.forEach((n,i)=>{
     gameState.players.push({id:'ai'+i,name:n,charId:null,ready:true});
@@ -1732,6 +1733,7 @@ function renderStickyNotes(){
     {char:'林养橙',color:'#d3e6f5',text:'小姐让我转告厨房，今晚的安神药她自己煎。老爷听了脸色很不好看。我总觉得要出什么事。——养橙'},
     {char:'黄立康',color:'#e6d3f5',text:'青溪镇的覃家大宅有些古怪。我哥哥十年前来过这里，之后就失踪了。我在石桥上捡到一块刻着"覃"字的玉佩。——文康'},
     {char:'崖微铭',color:'#f5d3d3',text:'师父临终前说："微铭，别像我一样，一辈子不敢做对的事。"我在覃家等了十年，等一个了断的机会。——微铭'},
+    {char:'容宇哲',color:'#d3f5e6',text:'《新民报》采访笔记：青溪镇覃家，十年间三名外乡青年"意外溺亡"。死者均为年轻男性，无亲无故。店主说，每年都有一个穿道袍的外乡人来镇上。——宇哲'},
     {char:'覃守元',color:'#d3f5d3',text:'崖先生，吉时已选定本月十五子时三刻。阴人阳人均已备妥，此事若成，覃家再保三年气运。——守元'},
     {char:'???',color:'#1a1a1a',textColor:'#e8e8e8',text:'每三年一对。\n你们以为这是冥婚？\n这是屠宰。\n——井下'}
   ];
@@ -2006,13 +2008,14 @@ function castVote(target){
     // 单人模式：AI自动投票
     if(soloMode){
       const aiPlayers=gameState.players.filter(p=>p.id!=='solo');
-      const voteOptions=['qin','lin','huang','ya'];
+      const voteOptions=['qin','lin','huang','ya','rong'];
       aiPlayers.forEach((p,i)=>{
         // AI根据角色倾向投票
         let aiVote;
         if(p.charId==='qin')aiVote='ya'; // 覃秋宜恨崖微铭助纣为虐
         else if(p.charId==='huang')aiVote='ya'; // 黄立康知道崖微铭是杀兄仇人
         else if(p.charId==='lin')aiVote='qin'; // 林养橙心疼小姐，觉得她怨念最重
+        else if(p.charId==='rong')aiVote='ya'; // 容宇哲恨崖微铭杀了未婚夫黄文轩
         else aiVote=voteOptions[Math.floor(Math.random()*voteOptions.length)];
         gameState.votes[p.name]=aiVote;
       });
@@ -2340,6 +2343,69 @@ const AI_CHAT_DATA = {
       c9:'镇魂水是我配的。林养橙的手是我害的。我会想办法治好她。',
       c10:'族谱上那个年轻人就是我。我十二岁跟着师父，十五岁开始帮他杀人。'
     }
+  },
+  rong: {
+    name:'容宇哲',
+    act1:[
+      '我是《新民报》的记者，我叫容宇哲。我只是来采访民俗的，这是什么情况？',
+      '等等，大门锁死了？你们说我也被困住了？这不可能，我只是路过而已。',
+      '我不管什么困灵局，我要出去。我还有稿子要写，还有……还有人在等我。',
+      '黄文轩……这个名字你们听说过吗？十年前，他在青溪镇失踪了。',
+      '这纸人……它们的眼睛在动？这一定是什么机关把戏，我不信鬼神。',
+      '覃家？我查了覃家整整十年。他们到底在隐瞒什么？',
+      '等等，那个穿道袍的……崖微铭？我在黄文轩的信里看到过这个名字。',
+      '我不管你们信不信，我会把这里的一切都报道出去。覃家的罪行，瞒不住的。',
+      '我怀孕了。三个月了。我必须活着出去，为了这个孩子。',
+      '想出去，就先弄清楚你们为什么会在这里。还有——我为什么会在这里。'
+    ],
+    act2:[
+      '《阴亲录》……覃家用人命换富贵？这就是黄文轩查到的东西。',
+      '鹤顶红……覃守元杀了自己的女儿？这家人都是疯子。',
+      '老井里的白骨……十几具。这些都是被献祭的人？',
+      '黄文轩的牌位……他在这里。他真的在这里。我找了他十年。',
+      '原来他一直就在这口井里。我每年清明都来青溪镇，却从来没有找对地方。',
+      '崖微铭，是你杀了黄文轩对不对？十年前，是你把他推下河的。',
+      '这玉佩……是我送给文轩的定情信物。它怎么会在这里？',
+      '镇魂水……林养橙，你的手就是被这个害的？覃家连丫鬟都不放过。',
+      '族谱……从光绪二十年开始，每三年死两个人。这是百年的杀戮。',
+      '我要把这一切都拍下来。让全世界都知道覃家的罪行。'
+    ],
+    act3:[
+      '文轩在信里说……让我不要报仇，好好活着。他到死都在保护我。',
+      '孩子……我能感觉到他在动。我不能让他生下来就没有父亲。',
+      '黄立康……你是文轩的弟弟？你和他长得真像，尤其是眉眼。',
+      '崖微铭，我恨了你十年。但现在……我甚至不知道该恨你还是该恨覃守元。',
+      '焚簿破局……五人同心，每人折寿两载。我愿意。两年阳寿算什么。',
+      '文轩等了十年。如果焚簿能让他解脱，折寿两年太便宜我了。',
+      '我本来打算打掉这个孩子的。一个人带着孩子太苦了。但现在……我想把他生下来。',
+      '孩子，娘带你一起，送你父亲最后一程。',
+      '投票选锚点？不，我不选。我们应该一起焚簿破局，没有人需要牺牲。',
+      '崖微铭，你杀了文轩。但如果你愿意焚簿赎罪，我可以不恨你。'
+    ],
+    act4:[
+      '我选择焚簿。不是为了原谅谁，是为了让文轩和那些死去的人安息。',
+      '孩子，看着娘。娘要做一件对的事。',
+      '黄立康，我们一起。为了文轩，为了所有被覃家害死的人。',
+      '崖微铭，你来焚簿。你欠的债，你自己还。',
+      '我不要什么锚点，不要什么独活。我们五个人一起出去。',
+      '文轩，你看到了吗？我终于查到真相了。你可以安息了。',
+      '两年阳寿算什么。我还有几十年要活，还要把孩子养大，还要把覃家的罪证公之于众。',
+      '把生死簿给我。我是记者，我来记录这一刻。这是历史的见证。',
+      '覃守元会付出代价的。我会把这一切写在头版头条，让整个江南都知道。',
+      '红烛将尽。做决定吧。我选择——焚簿。'
+    ],
+    clueReactions:{
+      c1:'冥婚喜服……这就是覃家的把戏。用死人配阴亲，掩盖杀人的事实。',
+      c2:'四具纸人……四次献祭。加上黄文轩，就是五条人命。不，更多。',
+      c3:'棺木里的旧抓痕……以前的新娘也在里面醒来过。她们都没能逃出去。',
+      c4:'黄文轩的牌位……他在这里。我找了他十年，原来他一直就在这里。',
+      c5:'《阴亲录》……这就是文轩信里提到的东西。覃家的罪证都在这里。',
+      c6:'鹤顶红……覃守元连亲生女儿都杀。这种人应该千刀万剐。',
+      c7:'老井里的白骨……文轩，你就在这里面对不对？我来找你了。',
+      c8:'崖微铭的客房……师父的信？他师父也知道这是邪术？那他为什么还要做？',
+      c9:'镇魂水……林养橙，你的手就是被这个害的？覃家连丫鬟都不放过。',
+      c10:'覃家族谱……从光绪二十年开始，每三年死两个人。这是百年的杀戮。'
+    }
   }
 };
 
@@ -2415,7 +2481,7 @@ const AIDM_CONFIG = {
   timeoutMs:12000,
   degraded:false,
   lastAidmTime:0,
-  cooldownMs:15000
+  cooldownMs:8000
 };
 const STATIC_DM_LIB = {
   act1:['红烛摇曳，白绫悬于房梁。诸位，灵堂大门已经锁死，今夜是覃家的冥婚，也是一场选命。请各位先介绍自己的身份。','灵堂之内死寂沉沉，不妨互相聊聊，看看彼此身上藏着什么秘密。','子时三刻已过，纸人睁眼。诸位可还记得，自己是如何来到这座灵堂的？','覃家大小姐的棺木就停在灵堂中央。诸位，可有人知道她真正的死因？'],
@@ -2444,7 +2510,7 @@ function buildAidmSystemPrompt(){
     const c = SCRIPT.acts[1].clues.find(x=>x.id===id);
     return c?c.title:id;
   }).join('、');
-  return '你是民国冥婚剧本杀的DM崖微铭，正在主持一场4人剧本杀游戏。\n【剧本背景】民国十七年江南覃家冥婚，4人被困灵堂，十年每三年发生冥婚献祭命案。\n【角色】覃秋宜（被生父毒杀的大小姐）、林养橙（双手红痕的丫鬟）、黄立康（被推下河的书生）、崖微铭（背负六条人命的阴阳先生，即你）。\n【当前幕】第'+(gameState.currentAct+1)+'幕：'+(act?act.title:'')+'\n【已解锁线索】'+(unlockedClues||'暂无')+'\n【规则】\n1. 不能直接泄露凶手、核心真相，适度点拨，不能直接报答案。\n2. 根据玩家最近的公聊发言做回应，说话贴合民国恐怖灵堂氛围。\n3. 玩家跑偏时引导回剧本，玩家卡关时适度点拨线索方向。\n4. 每次回复控制在50-120字，不要太长。\n5. 以崖微铭的身份说话，语气神秘、略带压迫感。';
+  return '你是民国冥婚剧本杀的DM崖微铭，正在主持一场5人剧本杀游戏。\n【剧本背景】民国十七年江南覃家冥婚，5人被困灵堂，十年每三年发生冥婚献祭命案。\n【角色】覃秋宜（被生父毒杀的大小姐）、林养橙（双手红痕的丫鬟）、黄立康（被推下河的书生）、崖微铭（背负六条人命的阴阳先生，即你）、容宇哲（省城女记者，黄文轩未婚妻，怀有遗腹子）。\n【当前幕】第'+(gameState.currentAct+1)+'幕：'+(act?act.title:'')+'\n【已解锁线索】'+(unlockedClues||'暂无')+'\n【规则】\n1. 不能直接泄露凶手、核心真相，适度点拨，不能直接报答案。\n2. 根据玩家最近的公聊发言做回应，说话贴合民国恐怖灵堂氛围。\n3. 玩家跑偏时引导回剧本，玩家卡关时适度点拨线索方向。\n4. 每次回复控制在50-120字，不要太长。\n5. 以崖微铭的身份说话，语气神秘、略带压迫感。';
 }
 function getRecentChat(count){
   const recent = gameState.chatHistory.slice(-count);
@@ -2501,7 +2567,7 @@ async function triggerAidmResponse(){
   if(gameState.phase !== 'game')return;
   const now = Date.now();
   if(now - AIDM_CONFIG.lastAidmTime < AIDM_CONFIG.cooldownMs)return;
-  if(Math.random() > 0.3)return;
+  if(Math.random() > 0.85)return;
   AIDM_CONFIG.lastAidmTime = now;
   const recentChat = getRecentChat(5);
   const userText = '【最近公聊】\n'+recentChat+'\n\n请以崖微铭的身份，对以上玩家发言做出回应或引导。';
@@ -2775,6 +2841,7 @@ function dmStartGuide(actIndex){
       '林养橙，你的红痕不只是印记——它是开启封印的钥匙。你打算怎么做？',
       '崖微铭，生死簿最后一页到底写了什么？你是不是一直在隐瞒破局的方法？',
       '覃秋宜，你发簪里藏着什么？你从什么时候开始怀疑自己的父亲？',
+      '容宇哲，你调查了十年，你查到了什么？黄文轩的死，你真的愿意放下仇恨吗？',
       '你们五个人的命运都被覃家联系在了一起。是继续互相猜忌，还是联手破局？',
       '红烛快燃尽了。在最后投票之前，你们还有什么话想说？'
     ],
@@ -2785,6 +2852,7 @@ function dmStartGuide(actIndex){
       '如果投票选出一人留下，那个人会变成新的守门人。你们希望谁留下？',
       '覃秋宜，你可以选择反噬——让整个覃家为你陪葬，但你会魂飞魄散。你会怎么选？',
       '林养橙，你的红痕是焚簿的关键。你愿意承担这个责任吗？',
+      '容宇哲，你怀着孩子。你愿意为了焚簿折寿两年吗？你希望孩子活在什么样的世界里？',
       '投票之前，最后确认一下：你们真的了解全部真相了吗？'
     ]
   };
@@ -2810,6 +2878,11 @@ function addChat(name,message,isSystem){
   box.scrollTop=box.scrollHeight;
 }
 
+function insertDmMention(){
+  const input=document.getElementById('chatInput');
+  input.value='@DM '+input.value;
+  input.focus();
+}
 function sendChat(){
   const input=document.getElementById('chatInput');
   const msg=input.value.trim();
@@ -2819,8 +2892,30 @@ function sendChat(){
     fbSendMessage('chat',{name:gameState.myName,message:msg},'all');
   }
   input.value='';
-  // 触发AI-DM动态回应（带冷却和概率，自动降级）
-  triggerAidmResponse();
+  // 如果消息以@DM开头，直接呼叫AI-DM（跳过概率和冷却）
+  if(msg.startsWith('@DM')||msg.startsWith('@dm')||msg.startsWith('@崖微铭')){
+    manualCallDm(msg.replace(/^@(DM|dm|崖微铭)\s*/,''));
+  }else{
+    // 否则触发AI-DM动态回应（带冷却和概率，自动降级）
+    triggerAidmResponse();
+  }
+}
+async function manualCallDm(question){
+  if(AIDM_CONFIG.mode==='static'||AIDM_CONFIG.degraded){
+    addChat('DM',getStaticDmText(gameState.currentAct),false);
+    return;
+  }
+  if(gameState.phase!=='game')return;
+  addChat('DM','……（崖微铭缓缓抬起头，看向你）',false);
+  const recentChat=getRecentChat(5);
+  const userText='【玩家直接提问】'+question+'\n\n【最近公聊】\n'+recentChat+'\n\n请以崖微铭的身份，回答玩家的问题或做出引导。';
+  const reply=await callAIDM(userText);
+  if(reply&&reply.trim()){
+    addChat('DM',reply,false);
+    if(gameState.fbRoomRef){
+      fbSendMessage('chat',{name:'DM',message:reply},'all');
+    }
+  }
 }
 
 // ==================== 结局与复盘 ====================
